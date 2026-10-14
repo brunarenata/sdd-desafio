@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from motor_reembolso.modelos import Despesa
-from motor_reembolso.motor import _regra_valor_negativo
+from motor_reembolso.motor import _regra_categoria, _regra_valor_negativo
 
 
 def _despesa(**kwargs) -> Despesa:
@@ -31,3 +31,26 @@ def test_rn_010_estorno_ignorado():
 def test_rn_010_valor_positivo_nao_ignorado():
     despesa = _despesa(valor=Decimal("10.00"))
     assert _regra_valor_negativo(despesa) is None
+
+
+def test_rn_012_categoria_maiuscula():
+    despesa = _despesa(id="d-014", categoria_original="ALIMENTACAO")
+    resultado, categoria = _regra_categoria(despesa)
+    assert resultado is None
+    assert categoria == "alimentacao"
+
+
+def test_rn_009_categoria_mapeada():
+    despesa = _despesa(id="d-005", categoria_original="coworking", valor=Decimal("89.00"))
+    resultado, categoria = _regra_categoria(despesa)
+    assert resultado is None
+    assert categoria == "hospedagem"
+
+
+def test_rn_009_categoria_fora_da_politica():
+    despesa = _despesa(categoria_original="brinde")
+    resultado, categoria = _regra_categoria(despesa)
+    assert resultado is not None
+    assert resultado.status == "recusado"
+    assert "RN-009" in resultado.motivos
+    assert categoria is None
