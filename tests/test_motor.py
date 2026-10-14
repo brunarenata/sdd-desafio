@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from motor_reembolso.modelos import Despesa
 from motor_reembolso.motor import (
+    _aplicar_limites_diarios,
     _calcular_dias_viagem,
     _limite_diario,
     _regra_categoria,
@@ -183,3 +184,22 @@ def test_rn_006_sem_viagem_limite_padrao():
     dias_viagem: set = set()
     assert _limite_diario("alimentacao", date(2026, 7, 3), dias_viagem) == Decimal("60.00")
     assert _limite_diario("transporte_urbano", date(2026, 7, 3), dias_viagem) == Decimal("80.00")
+
+
+def test_rn_001_soma_dia_alimentacao():
+    d001 = _despesa(id="d-001", data=date(2026, 7, 3), valor=Decimal("72.50"))
+    d002 = _despesa(id="d-002", data=date(2026, 7, 3), valor=Decimal("38.00"))
+    resultados = _aplicar_limites_diarios(
+        [(d001, "alimentacao"), (d002, "alimentacao")], dias_viagem=set()
+    )
+    assert resultados[0].status == "aprovado_parcial"
+    assert resultados[0].valor_reembolsado == Decimal("60.00")
+    assert resultados[1].status == "recusado"
+    assert resultados[1].valor_reembolsado == Decimal("0.00")
+
+
+def test_rn_002_transporte_dentro_limite():
+    d003 = _despesa(id="d-003", categoria_original="transporte_urbano", valor=Decimal("70.00"))
+    resultados = _aplicar_limites_diarios([(d003, "transporte_urbano")], dias_viagem=set())
+    assert resultados[0].status == "aprovado"
+    assert resultados[0].valor_reembolsado == Decimal("70.00")

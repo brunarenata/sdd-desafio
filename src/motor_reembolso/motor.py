@@ -213,3 +213,70 @@ def _limite_diario(categoria: str, data: date, dias_viagem: set[date]) -> Decima
     if data in dias_viagem:
         limite = _quantizar(limite * politica.AMPLIACAO_VIAGEM)
     return limite
+
+
+def _motivo_limite(categoria: str) -> str:
+    if categoria == politica.CATEGORIA_ALIMENTACAO:
+        return "RN-001"
+    if categoria == politica.CATEGORIA_TRANSPORTE_URBANO:
+        return "RN-002"
+    raise ValueError(f"categoria sem limite diario: {categoria}")
+
+
+def _aplicar_limites_diarios(
+    despesas_validas: list[tuple[Despesa, str]], dias_viagem: set[date]
+) -> list[ResultadoDespesa]:
+    """RN-001/RN-002/RN-004: agrega por dia+categoria e corta sequencialmente.
+
+    Recebe apenas despesas de categorias com limite diario (alimentacao e
+    transporte_urbano); hospedagem e tratada por `_regra_hospedagem`.
+    Processa na ordem recebida (ordem de lancamento), que e o eixo do
+    corte sequencial definido na RN-004.
+    """
+    restante_por_grupo: dict[tuple[date, str], Decimal] = {}
+    resultados: list[ResultadoDespesa] = []
+
+    for despesa, categoria in despesas_validas:
+        chave_grupo = (despesa.data, categoria)
+        if chave_grupo not in restante_por_grupo:
+            restante_por_grupo[chave_grupo] = _limite_diario(
+                categoria, despesa.data, dias_viagem
+            )
+        restante = restante_por_grupo[chave_grupo]
+        limite_do_dia = _limite_diario(categoria, despesa.data, dias_viagem)
+        reembolso = _quantizar(min(despesa.valor, max(restante, Decimal("0.00"))))
+        restante_por_grupo[chave_grupo] = restante - reembolso
+        motivo = _motivo_limite(categoria)
+
+        if reembolso == despesa.valor:
+            status = "aprovado"
+            justificativa = (
+                f"Dentro do limite diario de R$ {limite_do_dia} para "
+                f"{categoria} em {despesa.data.isoformat()}."
+            )
+        elif reembolso > 0:
+            status = "aprovado_parcial"
+            justificativa = (
+                f"Soma de {categoria} do dia {despesa.data.isoformat()} excede "
+                f"o limite diario de R$ {limite_do_dia}; corte sequencial por "
+                f"ordem de lancamento, este item absorveu R$ {reembolso}."
+            )
+        else:
+            status = "recusado"
+            justificativa = (
+                f"Limite diario de R$ {limite_do_dia} para {categoria} em "
+                f"{despesa.data.isoformat()} ja foi esgotado por despesas "
+                "anteriores do mesmo dia."
+            )
+
+        resultados.append(
+            ResultadoDespesa(
+                despesa=despesa,
+                valor_reembolsado=reembolso,
+                status=status,
+                motivos=[motivo, "RN-004"],
+                justificativa=justificativa,
+            )
+        )
+
+    return resultados
