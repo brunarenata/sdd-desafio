@@ -102,3 +102,23 @@ def _regra_duplicata(
         )
     chaves_vistas.add(chave)
     return None
+
+
+def _regra_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
+    """RN-005: nota fiscal obrigatoria para valor estritamente > R$100.
+
+    AMB-003: fronteira exclusiva (R$100,00 exatos nao exigem nota).
+    AMB-004: ausencia da nota exigida recusa o item integralmente.
+    """
+    if despesa.valor > politica.GATILHO_NOTA_FISCAL and not despesa.tem_nota_fiscal:
+        return ResultadoDespesa(
+            despesa=despesa,
+            valor_reembolsado=Decimal("0.00"),
+            status="recusado",
+            motivos=["RN-005"],
+            justificativa=(
+                f"Valor R$ {despesa.valor} acima de R$ {politica.GATILHO_NOTA_FISCAL} "
+                "exige nota fiscal, que nao foi informada."
+            ),
+        )
+    return None

@@ -5,6 +5,7 @@ from motor_reembolso.modelos import Despesa
 from motor_reembolso.motor import (
     _regra_categoria,
     _regra_duplicata,
+    _regra_nota_fiscal,
     _regra_periodo,
     _regra_valor_negativo,
 )
@@ -99,3 +100,21 @@ def test_rn_008_despesas_diferentes_nao_sao_duplicata():
     chaves_vistas: set = set()
     assert _regra_duplicata(d001, "alimentacao", chaves_vistas) is None
     assert _regra_duplicata(d002, "alimentacao", chaves_vistas) is None
+
+
+def test_rn_005_limite_sem_nota_na_fronteira():
+    despesa = _despesa(id="d-003", valor=Decimal("100.00"), tem_nota_fiscal=False)
+    assert _regra_nota_fiscal(despesa) is None
+
+
+def test_rn_005_acima_sem_nota():
+    despesa = _despesa(id="d-004", valor=Decimal("100.01"), tem_nota_fiscal=False)
+    resultado = _regra_nota_fiscal(despesa)
+    assert resultado is not None
+    assert resultado.status == "recusado"
+    assert "RN-005" in resultado.motivos
+
+
+def test_rn_005_acima_com_nota():
+    despesa = _despesa(valor=Decimal("150.00"), tem_nota_fiscal=True)
+    assert _regra_nota_fiscal(despesa) is None
