@@ -74,3 +74,31 @@ def _regra_periodo(despesa: Despesa, inicio: date, fim: date) -> ResultadoDespes
             ),
         )
     return None
+
+
+def _chave_duplicata(despesa: Despesa, categoria: str) -> tuple:
+    return (despesa.data, categoria, despesa.valor, despesa.fornecedor)
+
+
+def _regra_duplicata(
+    despesa: Despesa, categoria: str, chaves_vistas: set[tuple]
+) -> ResultadoDespesa | None:
+    """RN-008: recusa despesa duplicada (mesma data+categoria+valor+fornecedor).
+
+    Muta `chaves_vistas` registrando a chave da primeira ocorrencia (menor id,
+    assumindo chamadas na ordem de lancamento) como valida.
+    """
+    chave = _chave_duplicata(despesa, categoria)
+    if chave in chaves_vistas:
+        return ResultadoDespesa(
+            despesa=despesa,
+            valor_reembolsado=Decimal("0.00"),
+            status="recusado",
+            motivos=["RN-008"],
+            justificativa=(
+                "Duplicata de despesa com mesma data, categoria, valor e "
+                "fornecedor ja processada."
+            ),
+        )
+    chaves_vistas.add(chave)
+    return None

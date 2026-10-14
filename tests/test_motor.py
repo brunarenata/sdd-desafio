@@ -2,7 +2,12 @@ from datetime import date
 from decimal import Decimal
 
 from motor_reembolso.modelos import Despesa
-from motor_reembolso.motor import _regra_categoria, _regra_periodo, _regra_valor_negativo
+from motor_reembolso.motor import (
+    _regra_categoria,
+    _regra_duplicata,
+    _regra_periodo,
+    _regra_valor_negativo,
+)
 
 
 def _despesa(**kwargs) -> Despesa:
@@ -68,3 +73,29 @@ def test_rn_007_dentro_periodo():
     despesa = _despesa(data=date(2026, 7, 15))
     resultado = _regra_periodo(despesa, inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
     assert resultado is None
+
+
+def test_rn_008_duplicata():
+    d006 = _despesa(
+        id="d-006", data=date(2026, 7, 9), categoria_original="alimentacao",
+        fornecedor="Bistro Central", valor=Decimal("54.90"),
+    )
+    d007 = _despesa(
+        id="d-007", data=date(2026, 7, 9), categoria_original="alimentacao",
+        fornecedor="Bistro Central", valor=Decimal("54.90"),
+    )
+    chaves_vistas: set = set()
+    resultado_1 = _regra_duplicata(d006, "alimentacao", chaves_vistas)
+    assert resultado_1 is None
+    resultado_2 = _regra_duplicata(d007, "alimentacao", chaves_vistas)
+    assert resultado_2 is not None
+    assert resultado_2.status == "recusado"
+    assert "RN-008" in resultado_2.motivos
+
+
+def test_rn_008_despesas_diferentes_nao_sao_duplicata():
+    d001 = _despesa(id="d-001", data=date(2026, 7, 3), valor=Decimal("72.50"))
+    d002 = _despesa(id="d-002", data=date(2026, 7, 3), valor=Decimal("38.00"))
+    chaves_vistas: set = set()
+    assert _regra_duplicata(d001, "alimentacao", chaves_vistas) is None
+    assert _regra_duplicata(d002, "alimentacao", chaves_vistas) is None
