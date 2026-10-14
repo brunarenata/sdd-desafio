@@ -190,3 +190,26 @@ def _regra_hospedagem(despesa: Despesa, categoria: str) -> ResultadoDespesa | No
             f"({numero_diarias} diaria(s))."
         ),
     )
+
+
+def _calcular_dias_viagem(despesas_categorizadas: list[tuple[Despesa, str | None]]) -> set[date]:
+    """RN-006/AMB-005: datas em que ha hospedagem lancada contam como viagem."""
+    return {
+        despesa.data
+        for despesa, categoria in despesas_categorizadas
+        if categoria == politica.CATEGORIA_HOSPEDAGEM
+    }
+
+
+def _limite_diario(categoria: str, data: date, dias_viagem: set[date]) -> Decimal:
+    """RN-001/RN-002 com ampliacao de RN-006 quando a data e dia de viagem."""
+    if categoria == politica.CATEGORIA_ALIMENTACAO:
+        limite = politica.LIMITE_ALIMENTACAO_DIA
+    elif categoria == politica.CATEGORIA_TRANSPORTE_URBANO:
+        limite = politica.LIMITE_TRANSPORTE_URBANO_DIA
+    else:
+        raise ValueError(f"categoria sem limite diario: {categoria}")
+
+    if data in dias_viagem:
+        limite = _quantizar(limite * politica.AMPLIACAO_VIAGEM)
+    return limite

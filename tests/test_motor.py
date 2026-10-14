@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from motor_reembolso.modelos import Despesa
 from motor_reembolso.motor import (
+    _calcular_dias_viagem,
+    _limite_diario,
     _regra_categoria,
     _regra_duplicata,
     _regra_hospedagem,
@@ -160,3 +162,24 @@ def test_rn_003_acima_do_limite_corta():
 def test_rn_003_categoria_diferente_nao_avaliada():
     despesa = _despesa(categoria_original="alimentacao")
     assert _regra_hospedagem(despesa, "alimentacao") is None
+
+
+def test_rn_006_calcula_dias_viagem_pela_hospedagem():
+    hospedagem = _despesa(id="d-010", data=date(2026, 7, 14), categoria_original="hospedagem")
+    alimentacao = _despesa(id="d-012", data=date(2026, 7, 18), categoria_original="alimentacao")
+    dias_viagem = _calcular_dias_viagem(
+        [(hospedagem, "hospedagem"), (alimentacao, "alimentacao")]
+    )
+    assert dias_viagem == {date(2026, 7, 14)}
+
+
+def test_rn_006_ampliacao_viagem():
+    dias_viagem = {date(2026, 7, 14)}
+    assert _limite_diario("alimentacao", date(2026, 7, 14), dias_viagem) == Decimal("90.00")
+    assert _limite_diario("transporte_urbano", date(2026, 7, 14), dias_viagem) == Decimal("120.00")
+
+
+def test_rn_006_sem_viagem_limite_padrao():
+    dias_viagem: set = set()
+    assert _limite_diario("alimentacao", date(2026, 7, 3), dias_viagem) == Decimal("60.00")
+    assert _limite_diario("transporte_urbano", date(2026, 7, 3), dias_viagem) == Decimal("80.00")
