@@ -1,0 +1,9 @@
+[project]
+name = "motor-reembolso"
+version = "1.0.0"
+description = "Motor de calculo de reembolso de despesas corporativas"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
