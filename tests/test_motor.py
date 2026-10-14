@@ -5,6 +5,7 @@ from motor_reembolso.modelos import Despesa
 from motor_reembolso.motor import (
     _regra_categoria,
     _regra_duplicata,
+    _regra_hospedagem,
     _regra_nota_fiscal,
     _regra_periodo,
     _regra_valor_negativo,
@@ -118,3 +119,44 @@ def test_rn_005_acima_sem_nota():
 def test_rn_005_acima_com_nota():
     despesa = _despesa(valor=Decimal("150.00"), tem_nota_fiscal=True)
     assert _regra_nota_fiscal(despesa) is None
+
+
+def test_rn_003_hospedagem_duas_diarias():
+    despesa = _despesa(
+        id="d-010", descricao="Hotel Rio - 2 diarias", valor=Decimal("480.00"),
+    )
+    resultado = _regra_hospedagem(despesa, "hospedagem")
+    assert resultado is not None
+    assert resultado.status == "aprovado"
+    assert resultado.valor_reembolsado == Decimal("480.00")
+
+
+def test_rn_003_hospedagem_tres_noites():
+    despesa = _despesa(
+        id="d-013", descricao="Airbnb 3 noites", valor=Decimal("690.00"),
+    )
+    resultado = _regra_hospedagem(despesa, "hospedagem")
+    assert resultado is not None
+    assert resultado.status == "aprovado"
+    assert resultado.valor_reembolsado == Decimal("690.00")
+
+
+def test_rn_003_sem_diarias_recusa():
+    despesa = _despesa(id="d-999", descricao="Hospedagem sem detalhe", valor=Decimal("300.00"))
+    resultado = _regra_hospedagem(despesa, "hospedagem")
+    assert resultado is not None
+    assert resultado.status == "recusado"
+    assert "RN-003" in resultado.motivos
+
+
+def test_rn_003_acima_do_limite_corta():
+    despesa = _despesa(descricao="Hotel caro 1 diaria", valor=Decimal("400.00"))
+    resultado = _regra_hospedagem(despesa, "hospedagem")
+    assert resultado is not None
+    assert resultado.status == "aprovado_parcial"
+    assert resultado.valor_reembolsado == Decimal("250.00")
+
+
+def test_rn_003_categoria_diferente_nao_avaliada():
+    despesa = _despesa(categoria_original="alimentacao")
+    assert _regra_hospedagem(despesa, "alimentacao") is None

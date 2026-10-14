@@ -8,11 +8,17 @@ A ordem das regras implementadas aqui segue a secao 8 da spec.
 
 from __future__ import annotations
 
+import re
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 
 from motor_reembolso import politica
 from motor_reembolso.modelos import Despesa, ResultadoDespesa
+
+
+def _quantizar(valor: Decimal) -> Decimal:
+    """RN-011: arredondamento half-even a 2 casas decimais."""
+    return valor.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
 
 def _regra_valor_negativo(despesa: Despesa) -> ResultadoDespesa | None:
@@ -122,3 +128,65 @@ def _regra_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
             ),
         )
     return None
+
+
+_PADRAO_DIARIAS = re.compile(r"(\d+)\s*(?:di[aá]rias?|noites?)", re.IGNORECASE)
+
+
+def _extrair_numero_diarias(descricao: str) -> int | None:
+    """AMB-010: extrai o numero de diarias/noites de um texto livre."""
+    correspondencia = _PADRAO_DIARIAS.search(descricao)
+    if correspondencia is None:
+        return None
+    return int(correspondencia.group(1))
+
+
+def _regra_hospedagem(despesa: Despesa, categoria: str) -> ResultadoDespesa | None:
+    """RN-003: limite de hospedagem por diaria.
+
+    AMB-010: numero de diarias extraido da descricao; fallback de recusa
+    quando nao identificavel. AMB-002: excedente e cortado no limite, nao
+    recusa o item inteiro.
+    """
+    if categoria != politica.CATEGORIA_HOSPEDAGEM:
+        return None
+
+    numero_diarias = _extrair_numero_diarias(despesa.descricao)
+    if numero_diarias is None or numero_diarias <= 0:
+        return ResultadoDespesa(
+            despesa=despesa,
+            valor_reembolsado=Decimal("0.00"),
+            status="recusado",
+            motivos=["RN-003"],
+            justificativa=(
+                "Numero de diarias/noites nao identificavel na descricao; "
+                "impossivel aplicar o limite por diaria com seguranca."
+            ),
+        )
+
+    valor_por_diaria = _quantizar(despesa.valor / numero_diarias)
+    limite_total = _quantizar(politica.LIMITE_HOSPEDAGEM_DIARIA * numero_diarias)
+
+    if valor_por_diaria > politica.LIMITE_HOSPEDAGEM_DIARIA:
+        return ResultadoDespesa(
+            despesa=despesa,
+            valor_reembolsado=limite_total,
+            status="aprovado_parcial",
+            motivos=["RN-003"],
+            justificativa=(
+                f"Valor por diaria R$ {valor_por_diaria} excede o limite de "
+                f"R$ {politica.LIMITE_HOSPEDAGEM_DIARIA}; reembolso cortado em "
+                f"R$ {limite_total} ({numero_diarias} diaria(s))."
+            ),
+        )
+
+    return ResultadoDespesa(
+        despesa=despesa,
+        valor_reembolsado=despesa.valor,
+        status="aprovado",
+        motivos=["RN-003"],
+        justificativa=(
+            f"Dentro do limite de R$ {politica.LIMITE_HOSPEDAGEM_DIARIA}/diaria "
+            f"({numero_diarias} diaria(s))."
+        ),
+    )
