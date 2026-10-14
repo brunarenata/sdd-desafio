@@ -6,6 +6,7 @@ from motor_reembolso.motor import (
     _aplicar_limites_diarios,
     _calcular_dias_viagem,
     _limite_diario,
+    _quantizar,
     _regra_categoria,
     _regra_duplicata,
     _regra_hospedagem,
@@ -203,3 +204,9 @@ def test_rn_002_transporte_dentro_limite():
     resultados = _aplicar_limites_diarios([(d003, "transporte_urbano")], dias_viagem=set())
     assert resultados[0].status == "aprovado"
     assert resultados[0].valor_reembolsado == Decimal("70.00")
+
+
+def test_rn_011_arredondamento():
+    assert _quantizar(Decimal("33.333")) == Decimal("33.33")
+    assert _quantizar(Decimal("33.335")) == Decimal("33.34")
+    assert _quantizar(Decimal("33.345")) == Decimal("33.34")
