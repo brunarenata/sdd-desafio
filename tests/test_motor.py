@@ -13,6 +13,7 @@ from motor_reembolso.motor import (
     _regra_nota_fiscal,
     _regra_periodo,
     _regra_valor_negativo,
+    calcular,
 )
 
 
@@ -210,3 +211,38 @@ def test_rn_011_arredondamento():
     assert _quantizar(Decimal("33.333")) == Decimal("33.33")
     assert _quantizar(Decimal("33.335")) == Decimal("33.34")
     assert _quantizar(Decimal("33.345")) == Decimal("33.34")
+
+
+def test_ordem_regras_estrutural_nao_consome_limite_diario():
+    """T-014: duplicata (etapa 4) e filtrada antes da agregacao diaria
+    (etapa 6); nao deve ocupar espaco do limite de outra despesa valida
+    do mesmo dia/categoria."""
+    d_x = _despesa(id="d-x", data=date(2026, 7, 5), valor=Decimal("50.00"), fornecedor="A")
+    d_y = _despesa(id="d-y", data=date(2026, 7, 5), valor=Decimal("50.00"), fornecedor="A")
+    d_z = _despesa(id="d-z", data=date(2026, 7, 5), valor=Decimal("20.00"), fornecedor="B")
+
+    resultados = calcular([d_x, d_y, d_z], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    por_id = {r.despesa.id: r for r in resultados}
+
+    assert por_id["d-y"].status == "recusado"
+    assert "RN-008" in por_id["d-y"].motivos
+    assert por_id["d-x"].status == "aprovado"
+    assert por_id["d-x"].valor_reembolsado == Decimal("50.00")
+    assert por_id["d-z"].status == "aprovado_parcial"
+    assert por_id["d-z"].valor_reembolsado == Decimal("10.00")
+
+
+def test_calcular_preserva_ordem_de_entrada():
+    d1 = _despesa(id="d-1", data=date(2026, 7, 1))
+    d2 = _despesa(id="d-2", data=date(2026, 7, 2))
+    resultados = calcular([d1, d2], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert [r.despesa.id for r in resultados] == ["d-1", "d-2"]
+
+
+def test_borda_fim_de_semana_sem_regra_especial():
+    """Caso de borda da secao 7 da spec: d-012 (sabado) nao recebe
+    tratamento diferente de qualquer outro dia."""
+    sabado = _despesa(id="d-012", data=date(2026, 7, 18), valor=Decimal("47.20"))
+    resultados = calcular([sabado], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert resultados[0].status == "aprovado"
+    assert resultados[0].valor_reembolsado == Decimal("47.20")

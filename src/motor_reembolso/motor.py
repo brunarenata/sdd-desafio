@@ -9,6 +9,7 @@ A ordem das regras implementadas aqui segue a secao 8 da spec.
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from datetime import date
 from decimal import ROUND_HALF_EVEN, Decimal
 
@@ -280,3 +281,62 @@ def _aplicar_limites_diarios(
         )
 
     return resultados
+
+
+def calcular(despesas: list[Despesa], inicio: date, fim: date) -> list[ResultadoDespesa]:
+    """Orquestra o pipeline de regras na ordem da secao 8 da spec.
+
+    Recebe despesas ja carregadas (modelos.Despesa) e o periodo de
+    competencia; devolve um ResultadoDespesa por despesa, na mesma ordem
+    de entrada. A primeira regra que recusa uma despesa interrompe a
+    avaliacao das seguintes para aquela despesa (secao 8 da spec); so
+    despesas que passam pelos filtros estruturais (RN-010, RN-009/RN-012,
+    RN-007, RN-008, RN-005) entram na agregacao de limite diario.
+    """
+    resultados_por_id: dict[str, ResultadoDespesa] = {}
+    validas: list[tuple[Despesa, str]] = []
+    chaves_duplicata: set[tuple] = set()
+
+    for despesa in despesas:
+        resultado = _regra_valor_negativo(despesa)
+        if resultado is not None:
+            resultados_por_id[despesa.id] = resultado
+            continue
+
+        resultado_categoria, categoria = _regra_categoria(despesa)
+        if resultado_categoria is not None:
+            resultados_por_id[despesa.id] = resultado_categoria
+            continue
+
+        despesa_normalizada = replace(despesa, categoria_normalizada=categoria)
+
+        resultado = _regra_periodo(despesa_normalizada, inicio, fim)
+        if resultado is not None:
+            resultados_por_id[despesa.id] = resultado
+            continue
+
+        resultado = _regra_duplicata(despesa_normalizada, categoria, chaves_duplicata)
+        if resultado is not None:
+            resultados_por_id[despesa.id] = resultado
+            continue
+
+        resultado = _regra_nota_fiscal(despesa_normalizada)
+        if resultado is not None:
+            resultados_por_id[despesa.id] = resultado
+            continue
+
+        validas.append((despesa_normalizada, categoria))
+
+    dias_viagem = _calcular_dias_viagem(validas)
+
+    for despesa, categoria in validas:
+        if categoria == politica.CATEGORIA_HOSPEDAGEM:
+            resultados_por_id[despesa.id] = _regra_hospedagem(despesa, categoria)
+
+    com_limite_diario = [
+        (d, c) for d, c in validas if c in politica.CATEGORIAS_COM_LIMITE_DIARIO
+    ]
+    for resultado in _aplicar_limites_diarios(com_limite_diario, dias_viagem):
+        resultados_por_id[resultado.despesa.id] = resultado
+
+    return [resultados_por_id[despesa.id] for despesa in despesas]
