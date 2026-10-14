@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from motor_reembolso.modelos import Despesa
-from motor_reembolso.motor import _regra_categoria, _regra_valor_negativo
+from motor_reembolso.motor import _regra_categoria, _regra_periodo, _regra_valor_negativo
 
 
 def _despesa(**kwargs) -> Despesa:
@@ -54,3 +54,17 @@ def test_rn_009_categoria_fora_da_politica():
     assert resultado.status == "recusado"
     assert "RN-009" in resultado.motivos
     assert categoria is None
+
+
+def test_rn_007_fora_periodo():
+    despesa = _despesa(id="d-008", data=date(2026, 4, 15), valor=Decimal("41.00"))
+    resultado = _regra_periodo(despesa, inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert resultado is not None
+    assert resultado.status == "recusado"
+    assert "RN-007" in resultado.motivos
+
+
+def test_rn_007_dentro_periodo():
+    despesa = _despesa(data=date(2026, 7, 15))
+    resultado = _regra_periodo(despesa, inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert resultado is None

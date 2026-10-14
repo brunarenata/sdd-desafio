@@ -8,6 +8,7 @@ A ordem das regras implementadas aqui segue a secao 8 da spec.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 from motor_reembolso import politica
@@ -57,3 +58,19 @@ def _regra_categoria(despesa: Despesa) -> tuple[ResultadoDespesa | None, str | N
         )
         return resultado, None
     return None, categoria
+
+
+def _regra_periodo(despesa: Despesa, inicio: date, fim: date) -> ResultadoDespesa | None:
+    """RN-007: recusa despesa com data fora do periodo de competencia."""
+    if not (inicio <= despesa.data <= fim):
+        return ResultadoDespesa(
+            despesa=despesa,
+            valor_reembolsado=Decimal("0.00"),
+            status="recusado",
+            motivos=["RN-007"],
+            justificativa=(
+                f"Data {despesa.data.isoformat()} fora do periodo de "
+                f"competencia {inicio.isoformat()} a {fim.isoformat()}."
+            ),
+        )
+    return None
