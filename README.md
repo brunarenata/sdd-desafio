@@ -69,6 +69,38 @@ Estrutura dos testes, um arquivo por módulo:
 - `tests/test_cli.py` — ponta a ponta via subprocesso contra
   `exemplos/despesas-exemplo.json`
 
+## Agentes customizados e skill (aXet.code)
+
+Além da CLI, o projeto tem dois agentes customizados em `.axet-code/agents/`
+e uma skill que os orquestra, pensados para quem for revisar/rodar o motor
+usando o aXet.code em vez do terminal puro:
+
+- **`calculo-reembolso`** — executa a CLI sobre um JSON de despesas e devolve
+  o resultado já resumido em linguagem natural (quantas despesas foram
+  aprovadas/recusadas, totais, motivo de cada recusa). Não edita nenhum
+  arquivo.
+- **`auditor-ambiguidades`** — roda a suíte `pytest`, confere se a tabela de
+  cobertura de `tasks.md` tem teste real para cada `RN-00X`, e cruza as 16
+  ambiguidades da seção 6 de `spec.md` contra a implementação. Quando recebe
+  um resultado de cálculo específico, também confirma se a justificativa de
+  cada despesa recusada é coerente com a regra citada. Devolve um veredito
+  `APROVADO` ou `ATENCAO` com a lista de achados. Também não edita nada —
+  é um papel de auditoria/relato.
+
+**Como usar:** dentro de uma sessão do aXet.code, digite:
+
+```
+%calcular-reembolso exemplos/despesas-exemplo.json
+```
+
+A skill pergunta o arquivo de entrada (se não informado), aciona o
+`calculo-reembolso`, repassa o resultado para o `auditor-ambiguidades`, e
+apresenta os dois resultados juntos — priorizando o veredito de auditoria
+caso ele aponte algo em `ATENCAO`.
+
+> Agentes e skills são lidos no início da sessão: se você acabou de clonar o
+> repositório, abra uma nova sessão do aXet.code antes de usar `%calcular-reembolso`.
+
 ## Estrutura do projeto
 
 ```
@@ -85,8 +117,11 @@ specs/001-motor-reembolso/
 ├── plan.md           # o como — stack, arquitetura, decisões técnicas
 ├── tasks.md          # T-001..T-0NN, rastreando spec → código → teste
 └── DECISIONS.md       # log de mudanças de spec
+.axet-code/
+├── agents/            # calculo-reembolso.md, auditor-ambiguidades.md
+└── skills/            # calcular-reembolso/SKILL.md (%calcular-reembolso)
 docs/
-├── sessions/          # exports das sessões de trabalho com o Claude Code
+├── sessions/          # exports das sessões de trabalho com o agente
 └── RELATORIO.md       # relatório final do desafio
 ```
 
