@@ -1,0 +1,33 @@
+from datetime import date
+from decimal import Decimal
+
+from motor_reembolso.modelos import Despesa
+from motor_reembolso.motor import _regra_valor_negativo
+
+
+def _despesa(**kwargs) -> Despesa:
+    base = dict(
+        id="d-999",
+        data=date(2026, 7, 1),
+        categoria_original="alimentacao",
+        descricao="teste",
+        fornecedor="fornecedor",
+        valor=Decimal("10.00"),
+        tem_nota_fiscal=True,
+    )
+    base.update(kwargs)
+    return Despesa(**base)
+
+
+def test_rn_010_estorno_ignorado():
+    despesa = _despesa(id="d-009", categoria_original="transporte_urbano", valor=Decimal("-45.00"))
+    resultado = _regra_valor_negativo(despesa)
+    assert resultado is not None
+    assert resultado.status == "ignorado"
+    assert resultado.valor_reembolsado == Decimal("0.00")
+    assert "RN-010" in resultado.motivos
+
+
+def test_rn_010_valor_positivo_nao_ignorado():
+    despesa = _despesa(valor=Decimal("10.00"))
+    assert _regra_valor_negativo(despesa) is None
