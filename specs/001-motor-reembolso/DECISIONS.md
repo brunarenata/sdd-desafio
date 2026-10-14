@@ -10,33 +10,10 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
-## D-002 — <título curto> · `<data>`
+*Nenhuma mudança de spec registrada até agora.* A spec v1.0 foi escrita e
+aprovada diretamente com as 16 ambiguidades já identificadas e decididas
+durante a sessão de autoria (ver `spec.md` seção 6) — não houve, portanto,
+uma versão anterior divergente para registrar como mudança.
 
-**Gatilho:** <o que provocou: envelope lacrado / erro descoberto na implementação /
-ambiguidade que só apareceu ao testar / o Claude apontou uma contradição>
-
-**O que mudou na spec:** <de → para, citando o ID da regra>
-
-**Por quê:**
-
-**O que isso invalidou:** <requisitos, decisões técnicas, testes que caíram>
-
-**Tasks afetadas:** <as que precisaram ser refeitas + as novas criadas>
-
-**Custo:** <quantos arquivos tocados, quanto tempo>
-
----
-
-## D-001 — <título curto> · `<data>`
-
-**Gatilho:**
-
-**O que mudou na spec:**
-
-**Por quê:**
-
-**O que isso invalidou:**
-
-**Tasks afetadas:**
-
-**Custo:**
+A próxima entrada esperada aqui é a absorção da mudança de requisito do
+Dia 2 (o "envelope"), quando chegar.
