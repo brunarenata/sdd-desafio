@@ -1,10 +1,5 @@
 # CLAUDE.md
 
-> Este arquivo é lido pelo Claude Code no início de toda sessão. É onde moram as
-> convenções que você não quer repetir em todo prompt.
-> Substitua os `<...>` e apague o que não usar. Mantenha curto — CLAUDE.md longo
-> é CLAUDE.md ignorado.
-
 ## O projeto
 
 Motor de cálculo de reembolso de despesas corporativas. CLI que lê um JSON de
@@ -34,16 +29,30 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
 
 ## Stack e comandos
 
-- Linguagem: `<...>`
-- Rodar: `<comando>`
-- Testes: `<comando>`
-- Lint/format: `<comando>`
+- Linguagem: Python 3.11+ (stdlib: `decimal`, `datetime`, `argparse`, `json`)
+- Rodar: `python -m motor_reembolso.cli calcular --input <entrada.json> --output <saida.json>`
+  (com `PYTHONPATH=src`, ou instalando o pacote em modo editável)
+- Testes: `pytest` (configurado via `pyproject.toml`, já aponta `pythonpath = ["src"]`)
+- Lint/format: não configurado neste projeto (fora de escopo do desafio de 2 dias)
 
 ## Convenções de código
 
-- `<nomenclatura, estrutura de pastas, tratamento de erro, o que for relevante>`
-- Valores monetários: `<como são representados — decimal, centavos em inteiro, etc.>`
+- Pacote em `src/motor_reembolso/`: `modelos.py` (estruturas de dados),
+  `politica.py` (constantes da política), `io_despesas.py` (leitura/validação
+  de entrada), `motor.py` (regras de negócio puras, sem I/O), `relatorio.py`
+  (montagem/serialização de saída), `cli.py` (ponto de entrada).
+- `motor.py` nunca importa `json`, `argparse` ou faz leitura de arquivo —
+  é função pura testável isoladamente.
+- Nomes de teste seguem `test_rn_00X_<resumo>` ou `test_amb_00X_<resumo>`,
+  referenciando o ID da regra/ambiguidade da spec (rastreabilidade).
+- Valores monetários: sempre `decimal.Decimal`, nunca `float`, exceto na
+  borda de serialização JSON de saída (onde `float` é inevitável porque
+  `json` nativo não serializa `Decimal`). Arredondamento: `ROUND_HALF_EVEN`
+  a 2 casas decimais (ver RN-011 em `spec.md`).
 
 ## Fora de escopo
 
-- `<o que este projeto explicitamente não faz — evita que o agente invente feature>`
+- Interface web/API HTTP — apenas CLI.
+- Autenticação, persistência entre execuções, integração com folha de
+  pagamento ou sistema real de notas fiscais.
+- Qualquer regra de negócio não registrada em `specs/001-motor-reembolso/spec.md`.
