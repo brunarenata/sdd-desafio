@@ -14,6 +14,43 @@
 > de entregar. Os blocos "O envelope" e partes de "Diligência"/sessões ficam
 > pendentes até o envelope do Dia 2 chegar e as sessões serem exportadas.
 
+> ## ☑ Checklist de retomada — 19 campos `<preencher>` pendentes
+>
+> **Cabeçalho**
+> - [ ] L3 — nome, link do repositório, data de entrega
+>
+> **Delegação**
+> - [ ] L72 — onde delegou e se arrependeu
+> - [ ] L74 — onde não delegou e deveria ter delegado
+>
+> **Discernimento (Caso 2, opcional)**
+> - [ ] L174 — padrão de erro recorrente do agente, se percebeu algum
+>
+> **Diligência**
+> - [ ] L185 — procedimento de verificação real (não o ideal)
+> - [ ] L189 — % honesto de diff lido por completo
+> - [ ] L192 — o que aceitou sem checar e o que custou depois
+> - [ ] L203 — se revisou pessoalmente a qualidade dos testes ou confiou na spec
+>
+> **O envelope (só depois que a mudança do Dia 2 chegar)**
+> - [ ] L217 — quantos arquivos tocados na mão
+> - [ ] L218 — quanto tempo levou
+> - [ ] L221 — o que a arquitetura absorveu de graça
+> - [ ] L225 — o que resistiu/teve que ser quebrado
+> - [ ] L227 — ordem real (spec→código ou código→spec, honestamente)
+> - [ ] L231 — o que faria diferente na spec original sabendo da mudança
+> - [ ] L233 — o que a spec poupou, em concreto
+>
+> **Fechamento**
+> - [ ] L239 — para qual tamanho de projeto isso valeu a pena
+> - [ ] L241 — para qual não valeria
+> - [ ] L243 — o que faria diferente
+> - [ ] L246 — a coisa mais desconfortável que aprendeu sobre trabalhar com IA
+>
+> Dica para retomar: linhas numeradas acima batem com o arquivo atual — abra
+> direto na linha e preencha. Peça para o agente ler este checklist em voz
+> alta ou ir perguntando campo a campo, se preferir ser guiado.
+
 ---
 
 ## Delegação
