@@ -1,6 +1,8 @@
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
+from motor_reembolso import cambio, politica
 from motor_reembolso.modelos import Despesa
 from motor_reembolso.motor import (
     _aplicar_limites_diarios,
@@ -8,13 +10,19 @@ from motor_reembolso.motor import (
     _limite_diario,
     _quantizar,
     _regra_categoria,
+    _regra_conversao_moeda,
     _regra_duplicata,
     _regra_hospedagem,
+    _regra_hospedagem_zerada_cc,
     _regra_nota_fiscal,
     _regra_periodo,
     _regra_valor_negativo,
     calcular,
 )
+
+RAIZ = Path(__file__).resolve().parents[1]
+POLITICA_V4 = RAIZ / "exemplos" / "envelope" / "politica-v4.json"
+CAMBIO_V4 = RAIZ / "exemplos" / "envelope" / "cambio.json"
 
 
 def _despesa(**kwargs) -> Despesa:
@@ -246,3 +254,210 @@ def test_borda_fim_de_semana_sem_regra_especial():
     resultados = calcular([sabado], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
     assert resultados[0].status == "aprovado"
     assert resultados[0].valor_reembolsado == Decimal("47.20")
+
+
+# --- Envelope do Dia 2 (Politica de Reembolso v4) ---------------------
+
+
+def test_rn_013_limite_por_centro_custo():
+    """CC-ENG-PLATAFORMA tem limite de alimentacao especifico (R$75,00),
+    diferente do limite padrao (R$60,00)."""
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="g-001", centro_custo="CC-ENG-PLATAFORMA", valor=Decimal("70.00")
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "aprovado"
+    assert resultados[0].valor_reembolsado == Decimal("70.00")
+
+
+def test_amb_013_cc_parcial_herda_limite_padrao_na_categoria_ausente():
+    """CC-ADM nao lista hospedagem; usa o limite padrao (R$250,00/diaria)."""
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="g-002",
+        centro_custo="CC-ADM",
+        categoria_original="hospedagem",
+        descricao="Hotel - 1 diaria",
+        valor=Decimal("240.00"),
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "aprovado"
+    assert resultados[0].valor_reembolsado == Decimal("240.00")
+
+
+def test_rn_014_representacao_aprovada_para_cc_que_lista():
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="e-001",
+        centro_custo="CC-COMERCIAL",
+        categoria_original="representacao",
+        valor=Decimal("250.00"),
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "aprovado"
+    assert "RN-014" in resultados[0].motivos
+
+
+def test_amb_014_representacao_recusada_para_cc_ausente_da_tabela():
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="f-003",
+        centro_custo="CC-SUPORTE-N2",
+        categoria_original="representacao",
+        valor=Decimal("190.00"),
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "recusado"
+    assert "RN-009" in resultados[0].motivos
+
+
+def test_rn_015_conversao_moeda_antes_de_demais_regras():
+    tabela_cambio = cambio.carregar_tabela_cambio(CAMBIO_V4)
+    despesa = _despesa(
+        id="e-002",
+        data=date(2026, 7, 14),
+        valor=Decimal("10.00"),
+        moeda="EUR",
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_cambio=tabela_cambio
+    )
+    assert resultados[0].valor_reembolsado == Decimal("10.00") * Decimal("5.93")
+    assert resultados[0].status == "aprovado"
+
+
+def test_amb_016_conversao_usa_ultimo_dia_util_anterior():
+    tabela_cambio = cambio.carregar_tabela_cambio(CAMBIO_V4)
+    despesa = _despesa(
+        id="e-004",
+        data=date(2026, 7, 18),
+        valor=Decimal("30.00"),
+        moeda="EUR",
+    )
+    resultado_cambio, valor_brl = _regra_conversao_moeda(despesa, tabela_cambio)
+    assert resultado_cambio is None
+    assert valor_brl == Decimal("30.00") * Decimal("5.96")
+
+
+def test_amb_015_moeda_sem_cotacao_fica_nao_processado():
+    tabela_cambio = cambio.carregar_tabela_cambio(CAMBIO_V4)
+    despesa = _despesa(id="e-006", valor=Decimal("55.00"), moeda="GBP")
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_cambio=tabela_cambio
+    )
+    assert resultados[0].status == "nao_processado"
+    assert "RN-015" in resultados[0].motivos
+
+
+def test_amb_015_sem_tabela_cambio_moeda_estrangeira_fica_nao_processado():
+    despesa = _despesa(id="e-002", valor=Decimal("22.00"), moeda="EUR")
+    resultados = calcular([despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert resultados[0].status == "nao_processado"
+
+
+def test_rn_016_hospedagem_zerada_por_politica_do_cc():
+    """CC-ENG-PLATAFORMA nao reembolsa hospedagem, mesmo com diarias
+    identificaveis na descricao (motivo distinto de AMB-010b)."""
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="g-003",
+        centro_custo="CC-ENG-PLATAFORMA",
+        categoria_original="hospedagem",
+        descricao="Hotel - 2 diarias",
+        valor=Decimal("400.00"),
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "recusado"
+    assert "RN-016" in resultados[0].motivos
+    assert "RN-003" not in resultados[0].motivos
+
+
+def test_amb_019_hospedagem_zerada_distingue_de_diarias_nao_identificaveis():
+    politica_cc = politica.resolver_politica_centro_custo(
+        politica.carregar_tabela_politica(POLITICA_V4), "CC-ENG-PLATAFORMA"
+    )
+    despesa = _despesa(categoria_original="hospedagem", descricao="sem numero")
+    resultado = _regra_hospedagem_zerada_cc(despesa, "hospedagem", politica_cc)
+    assert resultado is not None
+    assert resultado.motivos == ["RN-016"]
+
+
+def test_amb_018_representacao_nao_recebe_ampliacao_de_viagem():
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    hospedagem = _despesa(
+        id="e-007",
+        centro_custo="CC-COMERCIAL",
+        categoria_original="hospedagem",
+        data=date(2026, 7, 22),
+        descricao="Hotel - 3 noites",
+        valor=Decimal("1200.00"),
+    )
+    representacao = _despesa(
+        id="e-006b",
+        centro_custo="CC-COMERCIAL",
+        categoria_original="representacao",
+        data=date(2026, 7, 22),
+        valor=Decimal("300.00"),
+    )
+    resultados = calcular(
+        [hospedagem, representacao],
+        inicio=date(2026, 7, 1),
+        fim=date(2026, 7, 31),
+        tabela_politica=tabela,
+    )
+    por_id = {r.despesa.id: r for r in resultados}
+    assert por_id["e-006b"].valor_reembolsado == Decimal("300.00")
+    assert por_id["e-006b"].status == "aprovado"
+
+
+def test_rn_017_fila_aprovacao_manual_acima_de_500():
+    tabela = politica.carregar_tabela_politica(POLITICA_V4)
+    despesa = _despesa(
+        id="e-007",
+        centro_custo="CC-COMERCIAL",
+        categoria_original="hospedagem",
+        descricao="Hotel Londres - 3 noites",
+        valor=Decimal("1200.00"),
+    )
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "pendente"
+    assert resultados[0].valor_reembolsado == Decimal("1200.00")
+    assert "RN-017" in resultados[0].motivos
+
+
+def test_amb_020_limite_de_500_exato_nao_entra_na_fila():
+    despesa = _despesa(
+        id="g-004",
+        categoria_original="hospedagem",
+        descricao="Hotel - 1 diaria",
+        valor=Decimal("500.00"),
+    )
+    tabela = politica.TabelaPolitica(padrao={"hospedagem": Decimal("500.00"), "alimentacao": Decimal("60.00"), "transporte_urbano": Decimal("80.00")})
+    resultados = calcular(
+        [despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31), tabela_politica=tabela
+    )
+    assert resultados[0].status == "aprovado"
+    assert resultados[0].valor_reembolsado == Decimal("500.00")
+
+
+def test_amb_021_despesa_recusada_nunca_entra_na_fila():
+    despesa = _despesa(
+        id="g-005",
+        valor=Decimal("600.00"),
+        tem_nota_fiscal=False,
+    )
+    resultados = calcular([despesa], inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    assert resultados[0].status == "recusado"
