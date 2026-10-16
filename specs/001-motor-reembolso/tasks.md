@@ -137,7 +137,7 @@
   - **Aceite:** `test_politica.py::test_rn_013_resolve_limite_especifico_do_cc`,
     `test_amb_013_categoria_ausente_herda_padrao`,
     `test_amb_014_cc_ausente_usa_padrao_integral_sem_representacao`
-  - **Commit:** `<pendente>`
+  - **Commit:** `cc3dedc`
 
 - [x] **T-022** — Campos novos no modelo de dados (`modelos.py`,
   `io_despesas.py`): `Despesa.moeda` (opcional, default `BRL`) e
@@ -145,7 +145,7 @@
   - **Atende:** seção 3/4 da spec (entrada), base para RN-013 a RN-017
   - **Aceite:** `test_modelos.py::test_despesa_aceita_moeda_e_centro_custo`,
     `test_despesa_moeda_padrao_e_brl`
-  - **Commit:** `<pendente>`
+  - **Commit:** `f2b8835`
 
 - [x] **T-023** — RN-015: conversão de moeda estrangeira (taxa da data da
   despesa, fallback de último dia útil anterior, `status: nao_processado`
@@ -157,7 +157,7 @@
     `test_motor.py::test_rn_015_conversao_moeda_antes_de_demais_regras`,
     `test_amb_016_conversao_usa_ultimo_dia_util_anterior`,
     `test_amb_015_moeda_sem_cotacao_fica_nao_processado`
-  - **Commit:** `<pendente>`
+  - **Commit:** `63a11ae`
 
 - [x] **T-024** — RN-013/RN-014: categoria `representacao` condicional ao
   centro de custo e resolução de limite diário/por diária pela tabela de
@@ -165,7 +165,7 @@
   - **Atende:** RN-013, RN-014, RN-009 (atualizada)
   - **Aceite:** `test_motor.py::test_rn_014_representacao_aprovada_para_cc_que_lista`,
     `test_amb_014_representacao_recusada_para_cc_ausente_da_tabela`
-  - **Commit:** `<pendente>`
+  - **Commit:** `4f13121`
 
 - [x] **T-025** — RN-016: hospedagem não reembolsável por política do
   centro de custo (`limite: 0.00` explícito), motivo próprio distinto de
@@ -173,13 +173,13 @@
   - **Atende:** RN-016, AMB-019
   - **Aceite:** `test_motor.py::test_rn_016_hospedagem_zerada_por_politica_do_cc`,
     `test_amb_019_hospedagem_zerada_distingue_de_diarias_nao_identificaveis`
-  - **Commit:** `<pendente>`
+  - **Commit:** `4f13121`
 
 - [x] **T-026** — RN-006 ajustada: ampliação de viagem usa o percentual e
   os limites vigentes da política por CC, e não se aplica a `representacao`
   - **Atende:** RN-006 (atualizada), AMB-018
   - **Aceite:** `test_motor.py::test_amb_018_representacao_nao_recebe_ampliacao_de_viagem`
-  - **Commit:** `<pendente>`
+  - **Commit:** `4f13121`
 
 - [x] **T-027** — RN-017: fila de aprovação manual (`valor_reembolsado` >
   R$500,00 substitui `aprovado`/`aprovado_parcial` por `pendente`)
@@ -187,7 +187,7 @@
   - **Aceite:** `test_motor.py::test_rn_017_fila_aprovacao_manual_acima_de_500`,
     `test_amb_020_limite_de_500_exato_nao_entra_na_fila`,
     `test_amb_021_despesa_recusada_nunca_entra_na_fila`
-  - **Commit:** `<pendente>`
+  - **Commit:** `4f13121`
 
 - [x] **T-028** — `relatorio.py`: campo novo `resumo.quantidade_pendentes`
   e redefinição de `quantidade_aprovadas` como conjunto explícito
@@ -196,14 +196,14 @@
   - **Aceite:** `test_relatorio.py::test_amb_022_quantidade_pendentes_separada_de_aprovadas`,
     `test_amb_023_ignorado_nao_conta_como_aprovado`,
     `test_amb_015_nao_processado_excluido_do_total_declarado`
-  - **Commit:** `<pendente>`
+  - **Commit:** `74a20f2`
 
 - [x] **T-029** — `cli.py`: argumentos opcionais `--politica` e `--cambio`
   (caminhos para `politica-v4.json`/`cambio.json`); sem eles, usa a
   política padrão embutida e nunca converte moeda
   - **Atende:** seção 4 da spec (entrada adicional), seção 10 (fallback)
   - **Aceite:** `test_cli.py::test_cli_sem_politica_e_cambio_usa_fallback_v3`
-  - **Commit:** `<pendente>`
+  - **Commit:** `ad40a0f`
 
 - [x] **T-030** — Teste de integração ponta a ponta com
   `exemplos/envelope/despesas-envelope.json` e
@@ -211,7 +211,7 @@
   - **Atende:** critérios de aceite novos da seção 9 da spec
   - **Aceite:** `test_cli.py::test_cli_processa_envelope_v4_cc_comercial`,
     `test_cli_processa_envelope_v4_cc_desconhecido`
-  - **Commit:** `<pendente>`
+  - **Commit:** `ad40a0f`
 
 - [x] **T-031** — README.md atualizado com os novos argumentos de CLI e
   um exemplo de execução contra o envelope
@@ -219,7 +219,7 @@
     o estado atual do projeto)
   - **Aceite:** seguir o README do zero roda `calcular` sobre
     `despesas-envelope.json` com `--politica`/`--cambio` com sucesso
-  - **Commit:** `<pendente>`
+  - **Commit:** `77f3986`
 
 ---
 
