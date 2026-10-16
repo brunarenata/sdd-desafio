@@ -1,32 +1,12 @@
 # Relatório — Desafio SDD
 
-**Aluno:** `<nome>` · **Repositório:** `<link>` · **Data:** `<preencher ao entregar>`
+**Aluno:** Bruna Renata Correia · **Repositório:** https://github.com/brunarenata/sdd-desafio · **Data:** 16/10/2026
 
 > Isto não é redação. São **evidências**. Toda afirmação deve vir acompanhada de
 > arquivo, hash de commit ou trecho de sessão exportada. Um parágrafo bonito sem
 > evidência vale menos que uma frase curta com um hash.
 >
 > Vale 20 dos 100 pontos, e é a seção que mais separa notas.
-
-> **Nota de rascunho:** este arquivo foi pré-preenchido com evidências objetivas
-> (hashes, arquivos, cronologia) que já existem no repositório. Os campos de
-> reflexão pessoal (`<...>`) são seus — preencha com sua própria avaliação antes
-> de entregar. Os blocos "O envelope" e partes de "Diligência"/sessões ficam
-> pendentes até o envelope do Dia 2 chegar e as sessões serem exportadas.
-
-> ## ☑ Checklist de retomada — apenas 1 campo `<preencher>` pendente
->
-> **Cabeçalho**
-> - [ ] L3 — nome, link do repositório, data de entrega
->
-> **Delegação** — preenchido
-> **Discernimento (Caso 2, opcional)** — preenchido
-> **Diligência** — preenchido
-> **O envelope** — preenchido (envelope recebido e absorvido em 2026-10-15)
-> **Fechamento** — preenchido
->
-> Resta apenas o cabeçalho (L3), que só pode ser preenchido no momento da
-> entrega real.
 
 ---
 
@@ -44,7 +24,7 @@
 | Desenhar a arquitetura (`plan.md`) | Claude, com justificativa de alternativas descartadas | Escolha técnica sem impacto de regra de negócio |
 | Implementar (T-001 a T-020) | Claude | Implementação mecânica a partir de tasks já definidas |
 | Escrever testes | Claude | Mesmo risco de "teste complacente" descrito na seção Diligência abaixo |
-| Absorver o envelope (Dia 2) | `<pendente>` | `<pendente>` |
+| Absorver o envelope (Dia 2) | Claude (redação/código), humano decidindo as 11 ambiguidades novas (AMB-013 a AMB-023) uma a uma | Mesma divisão da v3: decisão de negócio é humana, execução mecânica é delegada |
 
 **Onde deleguei e me arrependi:** aprovei as decisões de ambiguidade (AMB-00X)
 uma a uma, no momento em que cada pergunta foi feita, sem voltar depois para
@@ -70,11 +50,18 @@ em vez de só ser descoberta semanas depois ao rodar uma auditoria sobre o
 resultado real. Delegar isso mais cedo teria evitado carregar uma
 contradição interna na spec por todo o período de implementação.
 
-**Usei subagentes / skills / MCP / hooks?** Não neste projeto — o fluxo foi
-conduzido inteiramente na sessão principal do agente, com decisões de
-ambiguidade coletadas via prompts estruturados de escolha (uma pergunta por
-ambiguidade, com opções e justificativa). `<complementar se usou algo além
-disso>`
+**Usei subagentes / skills / MCP / hooks?** Sim, a partir da sessão de
+auditoria: o subagente `auditor-ambiguidades` (`.axet-code/agents/`) foi
+delegado para revisar a implementação do envelope v4 despesa a despesa
+contra a spec, de forma independente da sessão principal que escreveu o
+código — foi ele que encontrou a inconsistência de dados em RN-015
+(e-004/e-005 trocados no texto de exemplo). Também existe a skill
+`%calcular-reembolso`, que orquestra `calculo-reembolso` +
+`auditor-ambiguidades` para quem quiser rodar o motor e já receber um
+veredito de auditoria junto. Nas sessões de redação de spec/decisão de
+ambiguidade propriamente ditas, o fluxo continuou sendo conduzido na
+sessão principal, com decisões coletadas via prompts estruturados de
+escolha (uma pergunta por ambiguidade, com opções e justificativa).
 
 ---
 
@@ -279,11 +266,13 @@ evidência objetiva é a sequência de edições desta sessão, não um
 cronômetro.
 
 **Diff de absorção:** núcleo (`specs/` + `src/`): 9 arquivos,
-+1138/-109 linhas (`git diff HEAD --stat -- src/ specs/001-motor-reembolso/`).
++1138/-109 linhas (`git diff e37c414~1..77f3986 --stat -- src/ specs/001-motor-reembolso/`).
 Testes: 5 arquivos modificados +435 linhas, mais `tests/test_cambio.py`
-novo. `README.md`: +58/-9 linhas. Hashes de commit ainda não existem —
-nada foi commitado até o momento deste relatório (ver `tasks.md` Fase 5,
-coluna "Commit" com `<pendente>` em todas as T-021 a T-031).
+novo. `README.md`: +58/-9 linhas. Commitado em 10 commits sequenciais,
+um por task/grupo de tasks (`e37c414` spec/DECISIONS/tasks,
+`cc3dedc`..`77f3986` T-021 a T-031, `206beb7` RELATORIO.md e
+dashboards, `e478ea4` hashes finais em `tasks.md`) — rastreabilidade
+completa, sem nenhum `<pendente>` restante na Fase 5.
 
 **Absorveu de graça:** a separação de `motor.py` como função pura sem
 I/O (DT-002/DT-003 do `plan.md`) se confirmou exatamente como o `plan.md`
