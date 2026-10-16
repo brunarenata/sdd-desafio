@@ -1,0 +1,197 @@
+{
+  "colaborador": {
+    "id": "c-0417",
+    "nome": "Marina Volpi",
+    "centro_custo": "CC-ENG-PLATAFORMA"
+  },
+  "periodo": {
+    "competencia": "2026-07",
+    "inicio": "2026-07-01",
+    "fim": "2026-07-31"
+  },
+  "despesas": [
+    {
+      "id": "d-001",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 72.5,
+      "valor_reembolsado": 60.0,
+      "status": "aprovado_parcial",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Soma de alimentacao do dia 2026-07-03 excede o limite diario de R$ 60.00; corte sequencial por ordem de lancamento, este item absorveu R$ 60.00."
+    },
+    {
+      "id": "d-002",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 38.0,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Limite diario de R$ 60.00 para alimentacao em 2026-07-03 ja foi esgotado por despesas anteriores do mesmo dia."
+    },
+    {
+      "id": "d-003",
+      "categoria_original": "transporte_urbano",
+      "categoria_aplicada": "transporte_urbano",
+      "valor_declarado": 100.0,
+      "valor_reembolsado": 80.0,
+      "status": "aprovado_parcial",
+      "motivos": [
+        "RN-002",
+        "RN-004"
+      ],
+      "justificativa": "Soma de transporte_urbano do dia 2026-07-06 excede o limite diario de R$ 80.00; corte sequencial por ordem de lancamento, este item absorveu R$ 80.00."
+    },
+    {
+      "id": "d-004",
+      "categoria_original": "transporte_urbano",
+      "categoria_aplicada": "transporte_urbano",
+      "valor_declarado": 100.01,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-005"
+      ],
+      "justificativa": "Valor R$ 100.01 acima de R$ 100.00 exige nota fiscal, que nao foi informada."
+    },
+    {
+      "id": "d-005",
+      "categoria_original": "coworking",
+      "categoria_aplicada": "hospedagem",
+      "valor_declarado": 89.0,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-003"
+      ],
+      "justificativa": "Numero de diarias/noites nao identificavel na descricao; impossivel aplicar o limite por diaria com seguranca."
+    },
+    {
+      "id": "d-006",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 54.9,
+      "valor_reembolsado": 54.9,
+      "status": "aprovado",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Dentro do limite diario de R$ 60.00 para alimentacao em 2026-07-09."
+    },
+    {
+      "id": "d-007",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 54.9,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-008"
+      ],
+      "justificativa": "Duplicata de despesa com mesma data, categoria, valor e fornecedor ja processada."
+    },
+    {
+      "id": "d-008",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 41.0,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-007"
+      ],
+      "justificativa": "Data 2026-04-15 fora do periodo de competencia 2026-07-01 a 2026-07-31."
+    },
+    {
+      "id": "d-009",
+      "categoria_original": "transporte_urbano",
+      "categoria_aplicada": null,
+      "valor_declarado": -45.0,
+      "valor_reembolsado": 0.0,
+      "status": "ignorado",
+      "motivos": [
+        "RN-010"
+      ],
+      "justificativa": "Valor negativo (estorno); despesa ignorada no calculo."
+    },
+    {
+      "id": "d-010",
+      "categoria_original": "hospedagem",
+      "categoria_aplicada": "hospedagem",
+      "valor_declarado": 480.0,
+      "valor_reembolsado": 480.0,
+      "status": "aprovado",
+      "motivos": [
+        "RN-003"
+      ],
+      "justificativa": "Dentro do limite de R$ 250.00/diaria (2 diaria(s))."
+    },
+    {
+      "id": "d-011",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 33.33,
+      "valor_reembolsado": 33.33,
+      "status": "aprovado",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Dentro do limite diario de R$ 60.00 para alimentacao em 2026-07-15."
+    },
+    {
+      "id": "d-012",
+      "categoria_original": "alimentacao",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 47.2,
+      "valor_reembolsado": 47.2,
+      "status": "aprovado",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Dentro do limite diario de R$ 60.00 para alimentacao em 2026-07-18."
+    },
+    {
+      "id": "d-013",
+      "categoria_original": "hospedagem",
+      "categoria_aplicada": "hospedagem",
+      "valor_declarado": 690.0,
+      "valor_reembolsado": 0.0,
+      "status": "recusado",
+      "motivos": [
+        "RN-005"
+      ],
+      "justificativa": "Valor R$ 690.00 acima de R$ 100.00 exige nota fiscal, que nao foi informada."
+    },
+    {
+      "id": "d-014",
+      "categoria_original": "ALIMENTACAO",
+      "categoria_aplicada": "alimentacao",
+      "valor_declarado": 61.0,
+      "valor_reembolsado": 60.0,
+      "status": "aprovado_parcial",
+      "motivos": [
+        "RN-001",
+        "RN-004"
+      ],
+      "justificativa": "Soma de alimentacao do dia 2026-07-31 excede o limite diario de R$ 60.00; corte sequencial por ordem de lancamento, este item absorveu R$ 60.00."
+    }
+  ],
+  "resumo": {
+    "total_declarado": 1861.84,
+    "total_reembolsado": 815.43,
+    "total_recusado": 1046.41,
+    "quantidade_despesas": 14,
+    "quantidade_aprovadas": 8,
+    "quantidade_recusadas": 6
+  }
+}

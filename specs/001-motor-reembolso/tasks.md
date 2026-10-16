@@ -120,10 +120,106 @@
 
 ---
 
-## Fase 5 — Envelope (criar no Dia 2)
+## Fase 5 — Envelope (Política de Reembolso v4, Dia 2)
 
-<Novas tasks a partir da mudança de requisito. Numeração continua de onde parou —
-não reinicie e não renumere as antigas: a numeração é o eixo da rastreabilidade.>
+> Numeração continua de T-020. Ver `DECISIONS.md` (entrada 2026-10-15,
+> "Absorção do envelope do Dia 2") para o que mudou e por quê, e `spec.md`
+> seção 5/6 para as regras e ambiguidades novas (RN-013 a RN-017, AMB-013
+> a AMB-023).
+
+- [x] **T-021** — Carregamento de política externa (`politica.py`): função
+  que lê `politica-v4.json`, resolve limites/gatilho/ampliação por
+  `centro_custo` com fallback para o bloco `padrao` (categoria ausente
+  dentro de um CC existente) e para o `padrao` integral (CC ausente da
+  tabela); mantém as constantes atuais como política padrão embutida
+  quando nenhum arquivo é informado
+  - **Atende:** RN-013, AMB-013, AMB-014
+  - **Aceite:** `test_politica.py::test_rn_013_resolve_limite_especifico_do_cc`,
+    `test_amb_013_categoria_ausente_herda_padrao`,
+    `test_amb_014_cc_ausente_usa_padrao_integral_sem_representacao`
+  - **Commit:** `<pendente>`
+
+- [x] **T-022** — Campos novos no modelo de dados (`modelos.py`,
+  `io_despesas.py`): `Despesa.moeda` (opcional, default `BRL`) e
+  propagação de `centro_custo` até o ponto de cálculo
+  - **Atende:** seção 3/4 da spec (entrada), base para RN-013 a RN-017
+  - **Aceite:** `test_modelos.py::test_despesa_aceita_moeda_e_centro_custo`,
+    `test_despesa_moeda_padrao_e_brl`
+  - **Commit:** `<pendente>`
+
+- [x] **T-023** — RN-015: conversão de moeda estrangeira (taxa da data da
+  despesa, fallback de último dia útil anterior, `status: nao_processado`
+  quando a moeda não existe na tabela em nenhuma data)
+  - **Atende:** RN-015, AMB-015, AMB-016, AMB-017
+  - **Aceite:** `test_cambio.py::test_rn_015_converte_moeda_na_data_exata`,
+    `test_amb_016_data_sem_cotacao_usa_ultimo_dia_util_anterior`,
+    `test_amb_015_moeda_sem_cotacao_levanta_erro`;
+    `test_motor.py::test_rn_015_conversao_moeda_antes_de_demais_regras`,
+    `test_amb_016_conversao_usa_ultimo_dia_util_anterior`,
+    `test_amb_015_moeda_sem_cotacao_fica_nao_processado`
+  - **Commit:** `<pendente>`
+
+- [x] **T-024** — RN-013/RN-014: categoria `representacao` condicional ao
+  centro de custo e resolução de limite diário/por diária pela tabela de
+  política (ajusta `_regra_categoria` e a agregação diária)
+  - **Atende:** RN-013, RN-014, RN-009 (atualizada)
+  - **Aceite:** `test_motor.py::test_rn_014_representacao_aprovada_para_cc_que_lista`,
+    `test_amb_014_representacao_recusada_para_cc_ausente_da_tabela`
+  - **Commit:** `<pendente>`
+
+- [x] **T-025** — RN-016: hospedagem não reembolsável por política do
+  centro de custo (`limite: 0.00` explícito), motivo próprio distinto de
+  AMB-010b
+  - **Atende:** RN-016, AMB-019
+  - **Aceite:** `test_motor.py::test_rn_016_hospedagem_zerada_por_politica_do_cc`,
+    `test_amb_019_hospedagem_zerada_distingue_de_diarias_nao_identificaveis`
+  - **Commit:** `<pendente>`
+
+- [x] **T-026** — RN-006 ajustada: ampliação de viagem usa o percentual e
+  os limites vigentes da política por CC, e não se aplica a `representacao`
+  - **Atende:** RN-006 (atualizada), AMB-018
+  - **Aceite:** `test_motor.py::test_amb_018_representacao_nao_recebe_ampliacao_de_viagem`
+  - **Commit:** `<pendente>`
+
+- [x] **T-027** — RN-017: fila de aprovação manual (`valor_reembolsado` >
+  R$500,00 substitui `aprovado`/`aprovado_parcial` por `pendente`)
+  - **Atende:** RN-017, AMB-020, AMB-021
+  - **Aceite:** `test_motor.py::test_rn_017_fila_aprovacao_manual_acima_de_500`,
+    `test_amb_020_limite_de_500_exato_nao_entra_na_fila`,
+    `test_amb_021_despesa_recusada_nunca_entra_na_fila`
+  - **Commit:** `<pendente>`
+
+- [x] **T-028** — `relatorio.py`: campo novo `resumo.quantidade_pendentes`
+  e redefinição de `quantidade_aprovadas` como conjunto explícito
+  `{aprovado, aprovado_parcial}`
+  - **Atende:** seção 4 da spec (saída), AMB-022, AMB-023
+  - **Aceite:** `test_relatorio.py::test_amb_022_quantidade_pendentes_separada_de_aprovadas`,
+    `test_amb_023_ignorado_nao_conta_como_aprovado`,
+    `test_amb_015_nao_processado_excluido_do_total_declarado`
+  - **Commit:** `<pendente>`
+
+- [x] **T-029** — `cli.py`: argumentos opcionais `--politica` e `--cambio`
+  (caminhos para `politica-v4.json`/`cambio.json`); sem eles, usa a
+  política padrão embutida e nunca converte moeda
+  - **Atende:** seção 4 da spec (entrada adicional), seção 10 (fallback)
+  - **Aceite:** `test_cli.py::test_cli_sem_politica_e_cambio_usa_fallback_v3`
+  - **Commit:** `<pendente>`
+
+- [x] **T-030** — Teste de integração ponta a ponta com
+  `exemplos/envelope/despesas-envelope.json` e
+  `exemplos/envelope/despesas-envelope-cc-desconhecido.json`
+  - **Atende:** critérios de aceite novos da seção 9 da spec
+  - **Aceite:** `test_cli.py::test_cli_processa_envelope_v4_cc_comercial`,
+    `test_cli_processa_envelope_v4_cc_desconhecido`
+  - **Commit:** `<pendente>`
+
+- [x] **T-031** — README.md atualizado com os novos argumentos de CLI e
+  um exemplo de execução contra o envelope
+  - **Atende:** penalidade transversal da rubrica (README precisa cobrir
+    o estado atual do projeto)
+  - **Aceite:** seguir o README do zero roda `calcular` sobre
+    `despesas-envelope.json` com `--politica`/`--cambio` com sucesso
+  - **Commit:** `<pendente>`
 
 ---
 
@@ -147,9 +243,16 @@ exatamente a matriz que a correção vai montar.
 | RN-011 | T-013 | `test_rn_011_arredondamento` |
 | RN-012 | T-006 | `test_rn_012_categoria_maiuscula` |
 | AMB-001..012 | ver RN correspondente na seção 5/6 da spec | — |
+| RN-013 | T-021, T-024 | `test_rn_013_resolve_limite_especifico_do_cc`, `test_rn_013_limite_por_centro_custo` |
+| RN-014 | T-024 | `test_rn_014_representacao_aprovada_para_cc_que_lista` |
+| RN-015 | T-023 | `test_rn_015_conversao_moeda_antes_de_demais_regras`, `test_amb_015_moeda_sem_cotacao_fica_nao_processado` |
+| RN-016 | T-025 | `test_rn_016_hospedagem_zerada_por_politica_do_cc` |
+| RN-017 | T-027 | `test_rn_017_fila_aprovacao_manual_acima_de_500` |
+| AMB-013..023 | ver RN correspondente na seção 5/6 da spec | ver T-021 a T-028 acima |
 | Ordem de aplicação (seção 8) | T-014 | `test_ordem_regras_estrutural_nao_consome_limite_diario` |
 | Caso de borda fim de semana (seção 7) | T-015 | `test_borda_fim_de_semana_sem_regra_especial` |
 | Invariante de soma (seção 9) | T-016 | `test_invariante_soma_totais_exemplo_oficial` |
 | Formato de saída (seção 4) | T-017 | `test_formato_saida` |
 | CLI ponta a ponta | T-018 | `test_cli_processa_exemplo_oficial` |
 | Entrada inválida não gera saída (seção 9) | T-019 | `test_cli_entrada_invalida_nao_gera_saida` |
+| CLI ponta a ponta — envelope v4 | T-030 | `test_cli_processa_envelope_v4_cc_comercial`, `test_cli_processa_envelope_v4_cc_desconhecido` |
