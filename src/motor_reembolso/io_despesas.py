@@ -74,7 +74,7 @@ def _validar_campos(dados: dict, campos: tuple[str, ...], contexto: str) -> None
         )
 
 
-def _parse_despesa(dados: dict, indice: int) -> Despesa:
+def _parse_despesa(dados: dict, indice: int, centro_custo: str) -> Despesa:
     contexto = f"despesas[{indice}]"
     if not isinstance(dados, dict):
         raise EntradaInvalidaError(f"{contexto}: deve ser um objeto")
@@ -85,6 +85,9 @@ def _parse_despesa(dados: dict, indice: int) -> Despesa:
             f"{contexto}: 'tem_nota_fiscal' deve ser booleano"
         )
 
+    moeda_bruta = dados.get("moeda")
+    moeda = str(moeda_bruta) if moeda_bruta else "BRL"
+
     return Despesa(
         id=str(dados["id"]),
         data=_parse_data(dados["data"], contexto),
@@ -93,6 +96,8 @@ def _parse_despesa(dados: dict, indice: int) -> Despesa:
         fornecedor=str(dados["fornecedor"]),
         valor=_parse_valor(dados["valor"], contexto),
         tem_nota_fiscal=dados["tem_nota_fiscal"],
+        centro_custo=centro_custo,
+        moeda=moeda,
     )
 
 
@@ -137,6 +142,9 @@ def carregar_despesas(caminho: str | Path) -> EntradaDespesas:
     if not isinstance(lista_despesas, list):
         raise EntradaInvalidaError("despesas: deve ser uma lista")
 
-    despesas = [_parse_despesa(item, i) for i, item in enumerate(lista_despesas)]
+    centro_custo = str(colaborador["centro_custo"])
+    despesas = [
+        _parse_despesa(item, i, centro_custo) for i, item in enumerate(lista_despesas)
+    ]
 
     return EntradaDespesas(colaborador=colaborador, periodo=periodo, despesas=despesas)

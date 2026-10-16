@@ -10,7 +10,14 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-StatusDespesa = Literal["aprovado", "aprovado_parcial", "recusado", "ignorado"]
+StatusDespesa = Literal[
+    "aprovado",
+    "aprovado_parcial",
+    "recusado",
+    "ignorado",
+    "pendente",
+    "nao_processado",
+]
 
 
 @dataclass(frozen=True)
@@ -24,6 +31,8 @@ class Despesa:
     fornecedor: str
     valor: Decimal
     tem_nota_fiscal: bool
+    centro_custo: str = ""
+    moeda: str = "BRL"
     categoria_normalizada: str | None = None
 
 
@@ -48,6 +57,7 @@ class Resumo:
     quantidade_despesas: int
     quantidade_aprovadas: int
     quantidade_recusadas: int
+    quantidade_pendentes: int = 0
 
 
 @dataclass(frozen=True)

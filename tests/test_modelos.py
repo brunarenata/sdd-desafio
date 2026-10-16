@@ -48,6 +48,37 @@ def test_resumo_instancia_com_dados_minimos():
         quantidade_recusadas=1,
     )
     assert resumo.total_declarado == resumo.total_reembolsado + resumo.total_recusado
+    assert resumo.quantidade_pendentes == 0
+
+
+def test_despesa_aceita_moeda_e_centro_custo():
+    despesa = Despesa(
+        id="e-002",
+        data=date(2026, 7, 14),
+        categoria_original="alimentacao",
+        descricao="Almoco",
+        fornecedor="Taberna do Chiado",
+        valor=Decimal("22.00"),
+        tem_nota_fiscal=True,
+        centro_custo="CC-COMERCIAL",
+        moeda="EUR",
+    )
+    assert despesa.moeda == "EUR"
+    assert despesa.centro_custo == "CC-COMERCIAL"
+
+
+def test_despesa_moeda_padrao_e_brl():
+    despesa = Despesa(
+        id="d-001",
+        data=date(2026, 7, 3),
+        categoria_original="alimentacao",
+        descricao="Almoco",
+        fornecedor="Restaurante Tavola",
+        valor=Decimal("72.50"),
+        tem_nota_fiscal=True,
+    )
+    assert despesa.moeda == "BRL"
+    assert despesa.centro_custo == ""
 
 
 def test_resultado_calculo_instancia_com_dados_minimos():
