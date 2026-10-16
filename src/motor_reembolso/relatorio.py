@@ -13,18 +13,29 @@ from motor_reembolso.modelos import ResultadoCalculo, ResultadoDespesa, Resumo
 
 def _montar_resumo(resultados: list[ResultadoDespesa]) -> Resumo:
     """RN-010/AMB-009: estornos (status 'ignorado') nao entram em
-    total_declarado. total_recusado e a diferenca entre declarado e
-    reembolsado, conforme definido na secao 4 da spec."""
+    total_declarado. RN-015/AMB-015: despesas 'nao_processado' tambem nao
+    entram. total_recusado e a diferenca entre declarado e reembolsado,
+    conforme definido na secao 4 da spec.
+
+    AMB-023: quantidade_aprovadas e definida por inclusao explicita
+    (aprovado + aprovado_parcial), nao mais por exclusao de recusado —
+    isso evita contar 'ignorado'/'nao_processado'/'pendente' como
+    aprovados. AMB-022: 'pendente' tem contador proprio.
+    """
+    EXCLUIDOS_DO_TOTAL_DECLARADO = {"ignorado", "nao_processado"}
+    STATUS_APROVADOS = {"aprovado", "aprovado_parcial"}
+
     total_declarado = sum(
-        (r.despesa.valor for r in resultados if r.status != "ignorado"),
+        (r.despesa.valor for r in resultados if r.status not in EXCLUIDOS_DO_TOTAL_DECLARADO),
         start=Decimal("0.00"),
     )
     total_reembolsado = sum(
         (r.valor_reembolsado for r in resultados), start=Decimal("0.00")
     )
     total_recusado = total_declarado - total_reembolsado
-    quantidade_aprovadas = sum(1 for r in resultados if r.status != "recusado")
+    quantidade_aprovadas = sum(1 for r in resultados if r.status in STATUS_APROVADOS)
     quantidade_recusadas = sum(1 for r in resultados if r.status == "recusado")
+    quantidade_pendentes = sum(1 for r in resultados if r.status == "pendente")
 
     return Resumo(
         total_declarado=total_declarado,
@@ -33,6 +44,7 @@ def _montar_resumo(resultados: list[ResultadoDespesa]) -> Resumo:
         quantidade_despesas=len(resultados),
         quantidade_aprovadas=quantidade_aprovadas,
         quantidade_recusadas=quantidade_recusadas,
+        quantidade_pendentes=quantidade_pendentes,
     )
 
 
@@ -85,5 +97,6 @@ def serializar(resultado: ResultadoCalculo) -> dict:
             "quantidade_despesas": resultado.resumo.quantidade_despesas,
             "quantidade_aprovadas": resultado.resumo.quantidade_aprovadas,
             "quantidade_recusadas": resultado.resumo.quantidade_recusadas,
+            "quantidade_pendentes": resultado.resumo.quantidade_pendentes,
         },
     }

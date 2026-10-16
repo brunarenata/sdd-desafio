@@ -70,3 +70,67 @@ def test_estorno_excluido_do_total_declarado():
     item_estorno = next(d for d in saida["despesas"] if d["id"] == "d-009")
     assert item_estorno["status"] == "ignorado"
     assert item_estorno["valor_reembolsado"] == 0.0
+
+
+def test_amb_023_ignorado_nao_conta_como_aprovado():
+    """RELATORIO.md/auditoria apontou que a definicao antiga
+    (quantidade_aprovadas = status != recusado) contava d-009 (ignorado)
+    como aprovado. A definicao explicita corrige isso."""
+    entrada = carregar_despesas(EXEMPLO_OFICIAL)
+    resultados = calcular(entrada.despesas, entrada.periodo.inicio, entrada.periodo.fim)
+    resultado = montar_resultado_calculo(entrada, resultados)
+
+    aprovadas_explicitas = sum(
+        1 for r in resultados if r.status in ("aprovado", "aprovado_parcial")
+    )
+    assert resultado.resumo.quantidade_aprovadas == aprovadas_explicitas
+    assert resultado.resumo.quantidade_aprovadas == 7
+
+
+def test_amb_022_quantidade_pendentes_separada_de_aprovadas():
+    despesa = Despesa(
+        id="e-007",
+        data=date(2026, 7, 22),
+        categoria_original="hospedagem",
+        descricao="Hotel Londres - 3 noites",
+        fornecedor="Premier Inn",
+        valor=Decimal("1200.00"),
+        tem_nota_fiscal=True,
+        centro_custo="CC-COMERCIAL",
+    )
+    from motor_reembolso import politica
+
+    tabela = politica.carregar_tabela_politica(
+        RAIZ / "exemplos" / "envelope" / "politica-v4.json"
+    )
+    resultados = calcular(
+        [despesa],
+        date(2026, 7, 1),
+        date(2026, 7, 31),
+        tabela_politica=tabela,
+    )
+    entrada = carregar_despesas(EXEMPLO_OFICIAL)
+    resultado = montar_resultado_calculo(entrada, resultados)
+
+    assert resultados[0].status == "pendente"
+    assert resultado.resumo.quantidade_pendentes == 1
+    assert resultado.resumo.quantidade_aprovadas == 0
+
+
+def test_amb_015_nao_processado_excluido_do_total_declarado():
+    despesa = Despesa(
+        id="e-006",
+        data=date(2026, 7, 21),
+        categoria_original="alimentacao",
+        descricao="Almoco com parceiro",
+        fornecedor="The Ivy",
+        valor=Decimal("55.00"),
+        tem_nota_fiscal=True,
+        moeda="GBP",
+    )
+    resultados = calcular([despesa], date(2026, 7, 1), date(2026, 7, 31))
+    entrada = carregar_despesas(EXEMPLO_OFICIAL)
+    resultado = montar_resultado_calculo(entrada, resultados)
+
+    assert resultados[0].status == "nao_processado"
+    assert resultado.resumo.total_declarado == Decimal("0.00")
