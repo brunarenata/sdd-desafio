@@ -150,8 +150,10 @@ construídos sobre ela, e segui a implementação a partir daí.
 **Onde está a evidência:** `git log --oneline` deste repositório mostra a
 sequência completa de commits, incluindo os três descartados (ainda
 recuperáveis via `git reflog` se necessário) e o ponto de reconciliação em
-`fbad5f1`. `docs/sessions/<arquivo-desta-sessão>` — `<completar após exportar
-a sessão: o trecho onde o `git status` revelou "ahead by 20 commits">`.
+`fbad5f1`. `docs/sessions/01-spec-plan-tasks-implementacao.md` seção 7
+("Incidente real detectado e corrigido") traz o trecho onde o `git status`
+revelou "ahead of origin by 20 commits" e a investigação que levou à
+correção.
 
 ### Caso 2 *(opcional)*
 
