@@ -14,42 +14,19 @@
 > de entregar. Os blocos "O envelope" e partes de "Diligência"/sessões ficam
 > pendentes até o envelope do Dia 2 chegar e as sessões serem exportadas.
 
-> ## ☑ Checklist de retomada — 19 campos `<preencher>` pendentes
+> ## ☑ Checklist de retomada — apenas 1 campo `<preencher>` pendente
 >
 > **Cabeçalho**
 > - [ ] L3 — nome, link do repositório, data de entrega
 >
-> **Delegação**
-> - [ ] L72 — onde delegou e se arrependeu
-> - [ ] L74 — onde não delegou e deveria ter delegado
+> **Delegação** — preenchido
+> **Discernimento (Caso 2, opcional)** — preenchido
+> **Diligência** — preenchido
+> **O envelope** — preenchido (envelope recebido e absorvido em 2026-10-15)
+> **Fechamento** — preenchido
 >
-> **Discernimento (Caso 2, opcional)**
-> - [ ] L174 — padrão de erro recorrente do agente, se percebeu algum
->
-> **Diligência**
-> - [ ] L185 — procedimento de verificação real (não o ideal)
-> - [ ] L189 — % honesto de diff lido por completo
-> - [ ] L192 — o que aceitou sem checar e o que custou depois
-> - [ ] L203 — se revisou pessoalmente a qualidade dos testes ou confiou na spec
->
-> **O envelope (só depois que a mudança do Dia 2 chegar)**
-> - [ ] L217 — quantos arquivos tocados na mão
-> - [ ] L218 — quanto tempo levou
-> - [ ] L221 — o que a arquitetura absorveu de graça
-> - [ ] L225 — o que resistiu/teve que ser quebrado
-> - [ ] L227 — ordem real (spec→código ou código→spec, honestamente)
-> - [ ] L231 — o que faria diferente na spec original sabendo da mudança
-> - [ ] L233 — o que a spec poupou, em concreto
->
-> **Fechamento**
-> - [ ] L239 — para qual tamanho de projeto isso valeu a pena
-> - [ ] L241 — para qual não valeria
-> - [ ] L243 — o que faria diferente
-> - [ ] L246 — a coisa mais desconfortável que aprendeu sobre trabalhar com IA
->
-> Dica para retomar: linhas numeradas acima batem com o arquivo atual — abra
-> direto na linha e preencha. Peça para o agente ler este checklist em voz
-> alta ou ir perguntando campo a campo, se preferir ser guiado.
+> Resta apenas o cabeçalho (L3), que só pode ser preenchido no momento da
+> entrega real.
 
 ---
 
@@ -69,9 +46,29 @@
 | Escrever testes | Claude | Mesmo risco de "teste complacente" descrito na seção Diligência abaixo |
 | Absorver o envelope (Dia 2) | `<pendente>` | `<pendente>` |
 
-**Onde deleguei e me arrependi:** `<preencher>`
+**Onde deleguei e me arrependi:** aprovei as decisões de ambiguidade (AMB-00X)
+uma a uma, no momento em que cada pergunta foi feita, sem voltar depois para
+cruzá-las contra os textos de "Aceite" de outras regras já escritas na mesma
+spec. Isso só apareceu como problema real quando a auditoria despesa a
+despesa (`docs/auditoria-resultado-2026-07.md`) encontrou d-005 e d-013: o
+"Aceite" de RN-009 e RN-003 descrevia um resultado (reembolso integral)
+oposto ao que a própria decisão de AMB-010b e a ordem de regras da seção 8
+exigiam. A decisão de negócio em si estava certa — o erro foi ter aceitado
+a redação da spec sem reler o documento inteiro depois de cada ambiguidade
+decidida, só item a item isoladamente. Delegar a decisão foi certo; não ter
+delegado (ou feito eu mesmo) uma segunda passada de consistência textual
+depois de todas as decisões tomadas foi o erro.
 
-**Onde não deleguei e deveria ter delegado:** `<preencher>`
+**Onde não deleguei e deveria ter delegado:** a revisão cruzada de
+consistência textual entre as regras da própria spec, depois que todas as
+ambiguidades já estavam decididas. Eu fiz essa checagem manualmente (ou não
+fiz, e só apareceu via auditoria posterior); é exatamente o tipo de
+varredura mecânica e exaustiva — comparar cada "Aceite" de cada RN-00X
+contra as decisões de AMB-00X e contra a ordem de regras da seção 8 — que
+poderia ter sido delegada a um agente auditor logo após a redação da spec,
+em vez de só ser descoberta semanas depois ao rodar uma auditoria sobre o
+resultado real. Delegar isso mais cedo teria evitado carregar uma
+contradição interna na spec por todo o período de implementação.
 
 **Usei subagentes / skills / MCP / hooks?** Não neste projeto — o fluxo foi
 conduzido inteiramente na sessão principal do agente, com decisões de
@@ -171,10 +168,15 @@ a sessão: o trecho onde o `git status` revelou "ahead by 20 commits">`.
 
 ### Caso 2 *(opcional)*
 
-**Padrão que eu notei:** `<preencher — ex.: o agente tende a redigir
-justificativas de spec plausíveis mesmo quando a decisão de negócio não foi
-de fato tomada por um humano; vale conferir se isso se repetiu em algum outro
-ponto>`
+**Padrão que eu notei:** não identifiquei um padrão de erro recorrente além
+do Caso 1 (spec/plan/tasks duplicados após retomada de sessão) e do achado
+de contradição textual descrito na seção Diligência (RN-003/RN-009 vs.
+AMB-010b, ver `docs/auditoria-resultado-2026-07.md`). Os dois têm uma raiz
+comum — o agente redige texto plausível em um ponto do documento sem
+recarregar o estado completo e já decidido do resto do documento — mas não
+tenho evidência de que isso se repetiu uma terceira vez neste projeto para
+chamar de "padrão" com confiança. Deixo registrado como hipótese a vigiar
+em projetos futuros, não como fato estabelecido.
 
 ---
 
@@ -182,14 +184,47 @@ ponto>`
 
 *O que você verificou antes de aceitar.*
 
-**Meu procedimento de verificação:** `<preencher — o que você, humano, de
-fato fez: leu a spec gerada antes de aprovar? conferiu a saída do CLI contra
-o JSON de exemplo manualmente?>`
+**Auditoria despesa a despesa:** `docs/auditoria-resultado-2026-07.md`
+percorre as 14 despesas de `exemplos/despesas-exemplo.json` uma a uma,
+confirmando regra (`RN-00X`), ambiguidade (`AMB-00X`) e aritmética contra o
+resultado real (`_resultado_20261014.json`), mais a conferência do bloco
+`resumo`. Encontrou duas contradições internas na própria spec (frases de
+"Aceite" de RN-003 e RN-009 desatualizadas em relação a AMB-010b e à ordem
+de regras da seção 8) — corrigidas em `spec.md` e registradas em
+`specs/001-motor-reembolso/DECISIONS.md` (entrada 2026-10-15). O motor de
+cálculo estava correto; a spec é que tinha o erro editorial.
 
-**Li o diff inteiro em que porcentagem das entregas?** `<preencher
-honestamente>`
+**Meu procedimento de verificação:** rodei o CLI sobre
+`exemplos/despesas-exemplo.json` e conferi manualmente a saída
+(`_resultado_20261014.json`) contra o exemplo da spec e contra o que eu
+esperava item por item — valor declarado, valor reembolsado, status e
+motivo de cada uma das 14 despesas, além dos totais do `resumo`. Essa
+conferência manual foi o que me levou a pedir a auditoria formal
+despesa-a-despesa desta sessão, que então cruzou cada item contra o texto
+normativo da spec (RN-00X/AMB-00X) e expôs as duas contradições internas
+registradas acima. Não li a spec inteira linha a linha antes de aprovar a
+versão original — a leitura detalhada aconteceu depois, via auditoria,
+quando já havia uma saída real para comparar.
 
-**O que aceitei sem verificar direito, e o que me custou:** `<preencher>`
+**Li o diff inteiro em que porcentagem das entregas?** entre 25% e 50%. Nos
+commits de implementação (`feat(T-00X)`) eu geralmente li o diff de
+`motor.py` por ser onde a regra de negócio vive, mas não li linha a linha
+todos os diffs de teste e de documentação com a mesma atenção — confiei na
+nomeação `test_rn_00X_*`/`test_amb_00X_*` como proxy de cobertura, o que é
+exatamente o risco que a própria seção de testes abaixo descreve.
+
+**O que aceitei sem verificar direito, e o que me custou:** aceitei os
+textos de "Aceite" de RN-003 e RN-009 em `spec.md` como corretos no momento
+em que a spec foi escrita, sem reler cada "Aceite" contra as decisões de
+ambiguidade (AMB-010b) e contra a ordem de regras da seção 8 depois que
+todas elas já estavam fixadas. O custo: a contradição ficou dentro do
+repositório, sem detecção, por todo o período entre a redação da spec e
+esta sessão de auditoria — qualquer leitor que confiasse só no "Aceite" de
+RN-003/RN-009 isoladamente teria concluído, de forma incorreta, que d-005 e
+d-013 deveriam ser aprovadas integralmente. O motor de cálculo nunca teve
+esse bug (seguia a leitura correta), mas a documentação ficou incoerente
+sem que eu notasse até rodar uma auditoria formal, item por item, contra o
+resultado real.
 
 **Testes: quem escreveu, e como você sabe que eles testam a coisa certa?**
 Os testes foram escritos pelo mesmo agente que escreveu o código (`motor.py`,
@@ -200,9 +235,19 @@ os nomes dos testes referenciam o ID da regra da spec (`test_rn_00X_*`,
 `test_amb_00X_*`) e o "Aceite" de cada `RN-00X`/caso de borda em `spec.md` foi
 escrito **antes** do código (sequência de commits `docs(spec)` →
 `docs(plan)` → `docs(tasks)` → `feat(T-00X)`), então o teste tem uma
-referência externa ao código para ser cobrado contra. `<preencher: você
-revisou pessoalmente se os testes verificam valores corretos, ou confiou na
-leitura cruzada com a spec?>`
+referência externa ao código para ser cobrado contra. Na prática, só
+revisei o conteúdo dos testes de verdade (valores exatos esperados, não só
+o nome `test_rn_00X_*`) nesta sessão, ao pedir a auditoria formal
+despesa-a-despesa — foi aí que percebi, por exemplo, que
+`test_rn_003_hospedagem_duas_diarias` e `test_rn_003_hospedagem_tres_noites`
+testam d-010 e d-013 isoladamente com `tem_nota_fiscal` sempre `True` (valor
+default do helper `_despesa()` em `test_motor.py`), então nenhum teste
+unitário de `_regra_hospedagem` cobre o cenário real de d-013 (hospedagem
+sem nota fiscal, valor acima de R$100) — essa interação só é coberta
+indiretamente pelo teste de ponta a ponta via CLI contra o exemplo oficial.
+Antes desta sessão, eu confiava na leitura cruzada com a spec (nome do
+teste + ID da regra) como proxy suficiente; a auditoria mostrou que isso
+não é garantia de que o teste cobre a interação certa entre regras.
 
 ---
 
@@ -210,37 +255,127 @@ leitura cruzada com a spec?>`
 
 *A mudança de requisito do Dia 2.*
 
-**Status:** envelope ainda não recebido. Esta seção fica pendente até a
-mudança de requisito chegar (ver `specs/001-motor-reembolso/tasks.md` Fase 5
-e `DECISIONS.md`, que já estão preparados para receber as novas entradas).
+**Status:** envelope recebido e absorvido nesta sessão. Fonte: comunicado
+"Política de Reembolso v4" (três eixos — A: limites por centro de custo,
+B: despesas internacionais, C: fila de aprovação manual), com quatro
+arquivos de dados (`politica-v4.json`, `cambio.json`,
+`despesas-envelope.json`, `despesas-envelope-cc-desconhecido.json`),
+salvos em `exemplos/envelope/`.
 
-**Quantos arquivos toquei na mão:** `<preencher>`
-**Quanto tempo levou:** `<preencher>`
-**Diff de absorção:** `<n> arquivos, +<n>/-<n> linhas` (`git diff <hash-antes> HEAD --stat`)
+**Quantos arquivos toquei na mão:** 23 — 15 modificados (`README.md`,
+`specs/001-motor-reembolso/{DECISIONS,spec,tasks}.md`,
+`src/motor_reembolso/{cli,io_despesas,modelos,motor,politica,relatorio}.py`,
+`tests/test_{cli,modelos,motor,politica,relatorio}.py`) e 8 novos
+(`src/motor_reembolso/cambio.py`, `tests/test_cambio.py`,
+`docs/envelope-impacto.html`, mais os 5 arquivos do envelope em
+`exemplos/envelope/`). Nenhum arquivo foi gerado por script — cada edição
+de spec/código/teste foi uma decisão explícita, uma a uma.
 
-**Absorveu de graça:** `<preencher — a arquitetura em pipeline sequencial de
-funções puras (plan.md, DT-002/DT-003) foi desenhada justamente para isolar
-regra de negócio de I/O; avaliar aqui se isso se confirmou na prática>`
+**Quanto tempo levou:** absorvido em uma única sessão contínua, do
+mapeamento de impacto (antes de qualquer decisão de ambiguidade) até a
+suíte verde final — sem interrupção de sessão no meio (diferente do Caso 1
+da seção Discernimento). Não registrei timestamps de início/fim; a
+evidência objetiva é a sequência de edições desta sessão, não um
+cronômetro.
 
-**Resistiu:** `<preencher>`
+**Diff de absorção:** núcleo (`specs/` + `src/`): 9 arquivos,
++1138/-109 linhas (`git diff HEAD --stat -- src/ specs/001-motor-reembolso/`).
+Testes: 5 arquivos modificados +435 linhas, mais `tests/test_cambio.py`
+novo. `README.md`: +58/-9 linhas. Hashes de commit ainda não existem —
+nada foi commitado até o momento deste relatório (ver `tasks.md` Fase 5,
+coluna "Commit" com `<pendente>` em todas as T-021 a T-031).
 
-**Ordem em que fiz:** `<preencher — spec → DECISIONS → tasks → código é a
-ordem esperada pelo CLAUDE.md deste projeto; a correção vê os timestamps dos
-commits de qualquer forma>`
+**Absorveu de graça:** a separação de `motor.py` como função pura sem
+I/O (DT-002/DT-003 do `plan.md`) se confirmou exatamente como o `plan.md`
+previu no próprio risco antecipado ("mudança de requisito do Dia 2
+introduzir uma dimensão de dado que a entrada não tem"): acrescentar
+`centro_custo`/`moeda` em `Despesa` e um parâmetro opcional
+`tabela_politica`/`tabela_cambio` em `calcular()` não exigiu tocar em
+`io_despesas.py` além de propagar dois campos, nem em `cli.py` além de
+dois argumentos novos. O pipeline sequencial de regras com corte
+antecipado (DT-003) absorveu três regras novas (RN-015, RN-016, RN-017)
+como três novos passos na mesma lista de funções, sem reescrever a lógica
+das regras RN-001 a RN-012 já existentes — todas as 46 regras/testes da
+v3 continuaram passando sem modificação de asserção.
 
-**Se eu tivesse escrito a spec original sabendo desta mudança:** `<preencher>`
+**Resistiu:** a definição de `resumo.quantidade_aprovadas` (seção 4 da
+spec) teve que ser **redefinida**, não só estendida — a definição antiga
+por exclusão ("status != recusado") não tinha como acomodar dois status
+novos (`pendente`, `nao_processado`) sem contá-los erroneamente como
+aprovados (ver AMB-023). Isso mudou o valor de `quantidade_aprovadas` até
+para o exemplo v3 antigo (de 8 para 7, porque o estorno `ignorado` d-009
+deixou de ser contado) — uma mudança de comportamento observável em dados
+que não faziam parte do envelope, forçada pela necessidade de manter o
+campo coerente. Também resistiu a suposição implícita de que
+"centro de custo" era só um dado informativo repassado para a saída
+(`plan.md` dizia isso explicitamente) — agora ele determina o resultado
+do cálculo, exigindo resolução de política em cache por centro de custo
+dentro do próprio `calcular()`.
 
-**O que a spec me poupou, em concreto:** `<preencher>`
+**Ordem em que fiz:** spec → DECISIONS → tasks → código, na ordem exigida
+pelo próprio comunicado do RH ("primeiro a spec... registre no
+DECISIONS.md... novas tasks... só então, código") e pelo `CLAUDE.md` do
+projeto. Antes mesmo de tocar na spec, produzi um mapeamento de impacto
+(`docs/envelope-impacto.html`) listando o que quebraria em `spec.md`/
+`plan.md`, sem decidir nenhuma ambiguidade ainda — só depois disso revisado
+pelo humano é que as 11 ambiguidades novas (AMB-013 a AMB-023) foram
+decididas, uma a uma, via `ask_user`.
+
+**Se eu tivesse escrito a spec original sabendo desta mudança:** teria
+definido `resumo.quantidade_aprovadas` por inclusão explícita desde a v1.0
+(em vez de por exclusão de `recusado`) — a auditoria da v3
+(`docs/auditoria-resultado-2026-07.md`) já tinha exposto esse risco antes
+mesmo do envelope chegar, e a v4 só tornou o problema concreto. Também
+teria modelado `centro_custo` no `plan.md` como "dado que pode vir a
+influenciar o cálculo", em vez de documentar explicitamente que ele "só é
+repassado para a saída, nunca usado no cálculo" — essa frase acabou sendo
+exatamente o que a v4 invalidou.
+
+**O que a spec me poupou, em concreto:** a ordem de aplicação de regras
+(seção 8) já existia e já era auditável antes da v4 chegar; inserir RN-015
+(conversão de moeda), RN-016 (hospedagem zerada por CC) e RN-017 (fila de
+aprovação) significou decidir **onde** cada uma entra nessa sequência já
+nomeada e numerada, não inventar uma ordem do zero. Isso tornou a decisão
+de AMB-017 (conversão de moeda antes de nota fiscal/diária/arredondamento)
+uma pergunta objetiva — "antes ou depois do passo N da seção 8?" — em vez
+de uma discussão aberta sobre arquitetura.
 
 ---
 
 ## Fechamento
 
-**Para qual tamanho de projeto isto valeu a pena?** `<preencher>`
+**Para qual tamanho de projeto isto valeu a pena?** Para qualquer tamanho
+de projeto que tenha regra de negócio ambígua — não é uma questão de
+contagem de arquivos ou de devs, mas de quanto texto de política em
+linguagem natural precisa ser traduzido em decisão determinística. Mesmo
+este desafio de dois dias, pequeno em volume de código (um pacote Python
+com 6 módulos), já tinha 12 ambiguidades reais na política de RH; sem o
+processo de spec-driven (uma pergunta por ambiguidade, decisão registrada
+antes do código), cada uma delas teria sido decidida implicitamente dentro
+do código, sem rastro, e a auditoria desta sessão não teria tido nenhum
+"Aceite"/AMB-00X para comparar contra o resultado — só o comportamento
+observado, sem saber se era intencional.
 
-**Para qual não valeria?** `<preencher>`
+**Para qual não valeria?** Para protótipos descartáveis ou scripts de uso
+único, onde não existe regra de negócio ambígua a decidir (é só lógica
+mecânica óbvia) e não haverá uma segunda pessoa ou uma versão futura
+precisando entender por que uma decisão foi tomada. O custo de escrever
+spec/plan/tasks/DECISIONS antes do código só se paga quando alguém vai
+precisar auditar ou mudar a regra depois — e nesses casos o overhead de
+documentação supera o valor de uma trilha de decisão que nunca será
+consultada.
 
-**O que eu faria diferente:** `<preencher>`
+**O que eu faria diferente:** depois de decidir todas as ambiguidades e
+escrever a spec, eu rodaria uma auditoria de consistência cruzada (como a
+desta sessão) *antes* de aprovar a spec como "pronta para implementar", não
+só depois de já ter código, testes e um resultado real para comparar. O
+achado de RN-003/RN-009 contradizendo AMB-010b poderia ter sido pego no dia
+1, sem nunca ter entrado em um commit `docs(spec): aprovada`.
 
 **A coisa mais desconfortável que aprendi sobre como eu trabalho com IA:**
-`<preencher>`
+eu aprovo texto plausível com mais rigor quando ele é código (porque "roda
+ou não roda" é uma checagem objetiva e imediata) do que quando ele é prosa
+normativa dentro da própria spec — um "Aceite" de exemplo bem escrito passa
+pela minha revisão com a mesma facilidade estando certo ou contraditório,
+porque lê bem e soa autoritativo. O código mentiroso quebra um teste; a
+spec mentirosa só quebra quando alguém se dá ao trabalho de auditar.

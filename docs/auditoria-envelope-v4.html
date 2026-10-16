@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria — Implementação do Envelope v4</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #161c24; --panel-2: #1c2330; --border: #2a3340;
+    --text: #e6edf3; --muted: #8b98a5;
+    --green: #3fb950; --green-bg: rgba(63,185,80,0.12);
+    --yellow: #d29922; --yellow-bg: rgba(210,153,34,0.12);
+    --red: #f85149; --red-bg: rgba(248,81,73,0.12);
+    --blue: #58a6ff; --blue-bg: rgba(88,166,255,0.12);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.hero { padding: 40px 32px 28px; background: linear-gradient(135deg, #141a24 0%, #0f1419 100%); border-bottom: 1px solid var(--border); }
+  .hero h1 { margin: 0 0 6px; font-size: 25px; }
+  .hero .subtitle { color: var(--muted); font-size: 14px; }
+  .badges { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--border); }
+  .badge.ok { background: var(--green-bg); color: var(--green); border-color: rgba(63,185,80,0.35); }
+  .badge.warn { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(210,153,34,0.35); }
+  .badge.info { background: var(--blue-bg); color: var(--blue); border-color: rgba(88,166,255,0.35); }
+  main { max-width: 1180px; margin:0 auto; padding:32px; }
+  nav.toc { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px; padding:14px 16px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); }
+  nav.toc a { color:var(--blue); text-decoration:none; font-size:13px; padding:4px 10px; border-radius:6px; }
+  nav.toc a:hover { background: var(--panel-2); }
+  section { margin-bottom:44px; }
+  h2 { font-size:19px; margin:0 0 16px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  h2 .num { color:var(--muted); font-weight:500; }
+  p.lead { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:10px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+  .card .label { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .card .value { font-size: 26px; font-weight: 700; }
+  .card.green .value { color: var(--green); }
+  .card.red .value { color: var(--red); }
+  .card.blue .value { color: var(--blue); }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border-radius:var(--radius); overflow:hidden; font-size:13.3px; }
+  thead th { background:var(--panel-2); text-align:left; padding:10px 12px; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); border-bottom:1px solid var(--border); }
+  tbody td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.3px; }
+  .num-cell { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+  .pill.pass { background: var(--green-bg); color: var(--green); }
+  .pill.ressalva { background: var(--yellow-bg); color: var(--yellow); }
+  .pill.aprovado { background: var(--green-bg); color: var(--green); }
+  .pill.aprovado_parcial { background: var(--yellow-bg); color: var(--yellow); }
+  .pill.recusado { background: var(--red-bg); color: var(--red); }
+  .pill.pendente { background: var(--blue-bg); color: var(--blue); }
+  .pill.nao_processado { background: var(--panel-2); color: var(--muted); }
+  .tag { display:inline-block; background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:1px 7px; font-size:11px; font-family: ui-monospace, monospace; color:var(--muted); margin:1px 2px 1px 0; }
+  .finding { background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--yellow); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; }
+  .finding.fixed { border-left-color: var(--green); }
+  .finding.info { border-left-color: var(--blue); }
+  .finding h3 { margin:0 0 8px; font-size:15px; color: var(--yellow); }
+  .finding.fixed h3 { color: var(--green); }
+  .finding.info h3 { color: var(--blue); }
+  .finding p { margin:6px 0; font-size:13.5px; }
+  .diff { margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .diff .line { padding: 8px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .diff .before { background: var(--red-bg); color: #ffb4ad; border-bottom: 1px solid var(--border); }
+  .diff .after { background: var(--green-bg); color: #a9eeb4; }
+  .diff .before::before { content: "− ANTES  "; opacity: 0.7; }
+  .diff .after::before { content: "+ DEPOIS  "; opacity: 0.7; }
+  .fixed-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--green); font-weight: 600; margin-top: 10px; }
+  .note { color: var(--muted); font-size: 13px; }
+  footer { text-align: center; padding: 28px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Auditoria — Implementação do Envelope v4</h1>
+  <div class="subtitle">Política de Reembolso v4 (RN-013 a RN-017, AMB-013 a AMB-023) · auditado em 15/10/2026</div>
+  <div class="badges">
+    <span class="badge ok">✓ 79/79 testes passando</span>
+    <span class="badge ok">✓ 17/17 regras (RN-001 a RN-017) corretas</span>
+    <span class="badge ok">✓ 11/11 ambiguidades novas implementadas</span>
+    <span class="badge ok">✓ 14/14 itens do envelope conferidos item a item</span>
+    <span class="badge warn">⚠ 1 achado editorial corrigido nesta auditoria</span>
+    <span class="badge info">2 pendências de processo (não funcionais)</span>
+  </div>
+</header>
+
+<main>
+
+<nav class="toc">
+  <a href="#resumo">Resumo executivo</a>
+  <a href="#regras">RN-013 a RN-017</a>
+  <a href="#ambiguidades">AMB-013 a AMB-023</a>
+  <a href="#envelope-despesas">Itens do envelope (e-001..e-010, f-001..f-004)</a>
+  <a href="#regressao">Regressão v3</a>
+  <a href="#achados">Achados</a>
+</nav>
+
+<section id="resumo">
+  <h2><span class="num">01</span> Resumo executivo</h2>
+  <div class="cards">
+    <div class="card green"><div class="label">Testes passando</div><div class="value">79/79</div></div>
+    <div class="card green"><div class="label">Regras conferem</div><div class="value">17/17</div></div>
+    <div class="card green"><div class="label">Ambiguidades implementadas</div><div class="value">11/11</div></div>
+    <div class="card blue"><div class="label">Itens do envelope conferidos</div><div class="value">14/14</div></div>
+    <div class="card"><div class="label">Resumo aritmético</div><div class="value">OK</div></div>
+  </div>
+  <p class="lead">
+    O código do envelope v4 está correto e completo: todas as 5 regras novas, as 2 regras ajustadas
+    e as 11 ambiguidades decididas estão implementadas exatamente como a spec descreve, com teste
+    automatizado cobrindo o "Aceite" de cada uma. A execução real da CLI contra os dois arquivos do
+    envelope bate item a item com o esperado, e a soma do <span class="mono">resumo</span> fecha nos
+    dois casos. A auditoria encontrou <strong>um achado editorial</strong> na spec (RN-015 trocava os
+    dados de duas despesas no texto de exemplo) — já corrigido durante esta sessão, sem alterar
+    nenhum comportamento do motor.
+  </p>
+</section>
+
+<section id="regras">
+  <h2><span class="num">02</span> Regras novas/ajustadas (RN-013 a RN-017)</h2>
+  <table>
+    <thead><tr><th>Regra</th><th>O quê</th><th>Teste</th><th>Veredito</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">RN-013</td><td>Limites por centro de custo, com fallback padrão/padrão-por-categoria</td><td class="mono">test_rn_013_resolve_limite_especifico_do_cc, test_amb_013/014_*</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">RN-014</td><td><span class="mono">representacao</span> reembolsável só onde a tabela lista explicitamente</td><td class="mono">test_rn_014_representacao_aprovada_para_cc_que_lista</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">RN-015</td><td>Conversão de moeda estrangeira pela taxa da data da despesa</td><td class="mono">test_rn_015_*, test_amb_015/016/017_*</td><td><span class="pill ressalva">confere — texto de exemplo corrigido</span></td></tr>
+      <tr><td class="mono">RN-016</td><td>Hospedagem recusada por política do CC (limite R$0,00), motivo próprio</td><td class="mono">test_rn_016_hospedagem_zerada_por_politica_do_cc</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">RN-017</td><td>Fila de aprovação manual (&gt;R$500 vira <span class="mono">pendente</span>)</td><td class="mono">test_rn_017_fila_aprovacao_manual_acima_de_500</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">RN-006</td><td>(ajustada) Ampliação de viagem não se aplica a <span class="mono">representacao</span></td><td class="mono">test_amb_018_representacao_nao_recebe_ampliacao_de_viagem</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">RN-009</td><td>(ajustada) Inclui <span class="mono">representacao</span> condicional ao CC</td><td class="mono">test_amb_014_representacao_recusada_para_cc_ausente_da_tabela</td><td><span class="pill pass">confere</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ambiguidades">
+  <h2><span class="num">03</span> Ambiguidades novas (AMB-013 a AMB-023)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Decisão</th><th>Veredito</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">AMB-013</td><td>Categoria ausente num CC parcial herda limite padrão só para ela</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-014</td><td>CC ausente da tabela usa padrão integral; <span class="mono">representacao</span> nunca existe para ele</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-015</td><td>Moeda sem cotação → <span class="mono">nao_processado</span>, não interrompe as demais</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-016</td><td>Data sem cotação usa taxa do último dia útil anterior</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-017</td><td>Conversão de moeda ocorre antes de nota fiscal/diária/arredondamento</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-018</td><td>Ampliação de viagem não se estende a <span class="mono">representacao</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-019</td><td>Hospedagem zerada por CC usa motivo próprio (RN-016), nunca RN-003</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-020</td><td>Limiar de R$500 estritamente maior (R$500 exato não entra na fila)</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-021</td><td><span class="mono">pendente</span> nunca se aplica a despesa recusada/ignorada/não processada</td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-022</td><td>Campo próprio <span class="mono">quantidade_pendentes</span>, fora de <span class="mono">quantidade_aprovadas</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">AMB-023</td><td><span class="mono">quantidade_aprovadas</span> redefinida como conjunto explícito</td><td><span class="pill pass">confere</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="envelope-despesas">
+  <h2><span class="num">04</span> Itens do envelope — execução real da CLI</h2>
+
+  <h3 style="font-size:14px;color:var(--muted);margin-bottom:10px;">despesas-envelope.json — Rafael Nkemelu, CC-COMERCIAL</h3>
+  <table style="margin-bottom:24px;">
+    <thead><tr><th>ID</th><th>Status</th><th>Valor reembolsado</th><th>Motivos</th><th>Confere?</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">e-001</td><td><span class="pill aprovado_parcial">parcial</span></td><td class="num-cell">300,00</td><td><span class="tag">RN-014</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-002</td><td><span class="pill aprovado_parcial">parcial</span></td><td class="num-cell">90,00</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-003</td><td><span class="pill aprovado">aprovado</span></td><td class="num-cell">85,26</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-004</td><td><span class="pill aprovado_parcial">parcial</span></td><td class="num-cell">90,00</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓ (ver achado)</span></td></tr>
+      <tr><td class="mono">e-005</td><td><span class="pill recusado">recusado</span></td><td class="num-cell">0,00</td><td><span class="tag">RN-005</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-006</td><td><span class="pill nao_processado">não processado</span></td><td class="num-cell">0,00</td><td><span class="tag">RN-015</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-007</td><td><span class="pill pendente">pendente</span></td><td class="num-cell">1.200,00</td><td><span class="tag">RN-003</span><span class="tag">RN-017</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-008</td><td><span class="pill aprovado_parcial">parcial</span></td><td class="num-cell">90,00</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-009</td><td><span class="pill recusado">recusado</span></td><td class="num-cell">0,00</td><td><span class="tag">RN-003</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">e-010</td><td><span class="pill aprovado">aprovado</span></td><td class="num-cell">88,00</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:-10px;margin-bottom:24px;">
+    Resumo: total_declarado 2.457,52 = total_reembolsado 1.943,26 + total_recusado 514,26 ✓ ·
+    quantidade_despesas 10, aprovadas 6, recusadas 2, pendentes 1 ✓
+  </p>
+
+  <h3 style="font-size:14px;color:var(--muted);margin-bottom:10px;">despesas-envelope-cc-desconhecido.json — Dani Okonkwo, CC-SUPORTE-N2 (ausente da tabela)</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Status</th><th>Valor reembolsado</th><th>Motivos</th><th>Confere?</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">f-001</td><td><span class="pill aprovado">aprovado</span></td><td class="num-cell">58,00</td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">f-002</td><td><span class="pill aprovado_parcial">parcial</span></td><td class="num-cell">250,00</td><td><span class="tag">RN-003</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">f-003</td><td><span class="pill recusado">recusado</span></td><td class="num-cell">0,00</td><td><span class="tag">RN-009</span></td><td><span class="pill pass">✓</span></td></tr>
+      <tr><td class="mono">f-004</td><td><span class="pill aprovado">aprovado</span></td><td class="num-cell">65,76</td><td><span class="tag">RN-002</span><span class="tag">RN-004</span></td><td><span class="pill pass">✓</span></td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:10px;">
+    Resumo: total_declarado 623,76 = total_reembolsado 373,76 + total_recusado 250,00 ✓
+  </p>
+</section>
+
+<section id="regressao">
+  <h2><span class="num">05</span> Regressão no exemplo v3</h2>
+  <p class="lead">Rodado sem <span class="mono">--politica</span>/<span class="mono">--cambio</span> contra <span class="mono">exemplos/despesas-exemplo.json</span>: as 14 despesas mantiveram status/valor idênticos à v3. Única mudança esperada e confirmada:</p>
+  <div class="diff">
+    <div class="line before">quantidade_aprovadas: 8 (definição antiga, por exclusão de "recusado")</div>
+    <div class="line after">quantidade_aprovadas: 7 (AMB-023: conjunto explícito; d-009 "ignorado" deixou de contar)</div>
+  </div>
+</section>
+
+<section id="achados">
+  <h2><span class="num">06</span> Achados</h2>
+
+  <div class="finding fixed">
+    <h3>Achado 1 (corrigido nesta sessão) — RN-015 trocava os dados de e-004/e-005</h3>
+    <p>O "Aceite" de RN-015 e a linha de casos de borda (seção 7) atribuíam a <span class="mono">e-004</span> os valores <span class="mono">USD 40,00, 2026-07-20 (sábado)</span>. Os dados reais: <span class="mono">e-004</span> é <span class="mono">EUR 30,00</span> em <span class="mono">2026-07-18</span> (sábado real, sem cotação — o fallback de AMB-016 de fato se aplica); <span class="mono">USD 40,00</span>/<span class="mono">2026-07-20</span> pertence a <span class="mono">e-005</span>, cuja data é segunda-feira e <strong>tem</strong> cotação publicada — não é um caso de fallback.</p>
+    <div class="diff">
+      <div class="line before">e-004, USD 40,00, data 2026-07-20 (sábado, sem cotação publicada) → usa a taxa de USD do último dia útil anterior disponível.</div>
+      <div class="line after">e-004, EUR 30,00, data 2026-07-18 (sábado, sem cotação publicada) → usa a taxa de EUR do último dia útil anterior (2026-07-17).</div>
+    </div>
+    <p><strong>Causa raiz:</strong> mesmo padrão de erro editorial já corrigido uma vez em 2026-10-15 para RN-003/RN-009 — exemplo de regra escrito sem conferir contra os dados reais do arquivo de despesas. O código e os testes já implementavam o comportamento certo; só o texto de exemplo e a docstring de um teste estavam trocados.</p>
+    <div class="fixed-tag">✓ Corrigido em spec.md (RN-015, seção 7), tests/test_cambio.py e registrado em DECISIONS.md (2026-10-15)</div>
+  </div>
+
+  <div class="finding info">
+    <h3>Achado 2 (informativo, sem ação) — commits da Fase 5 ainda pendentes</h3>
+    <p>Todas as tasks T-021 a T-031 em <span class="mono">tasks.md</span> estão marcadas <span class="mono">[x]</span> (concluídas) mas com <span class="mono">Commit: &lt;pendente&gt;</span>. O código, specs e testes do envelope v4 existem na árvore de trabalho, ainda não commitados. Decisão do usuário: deixar como está por ora, sem commitar nesta sessão.</p>
+  </div>
+
+  <div class="finding info">
+    <h3>Achado 3 (informativo, não é defeito) — "AMB-010b" é um rótulo informal</h3>
+    <p>Citado 9 vezes na spec como se fosse uma ambiguidade numerada própria, mas é tratado como sub-caso de AMB-010 (mesma decisão, mesma regra afetada). Uso consistente ao longo do documento; não é uma inconsistência, só uma observação de nomenclatura.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Metodologia: suite <span class="mono">pytest</span> completa + execução real da CLI contra os dois
+  arquivos do envelope + comparação linha a linha contra <span class="mono">spec.md</span> seções 5/6/7/8/9 ·
+  nenhum achado funcional encontrado no código — apenas um erro editorial na spec, já corrigido.
+</footer>
+
+</body>
+</html>

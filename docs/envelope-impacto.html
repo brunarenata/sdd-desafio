@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envelope Dia 2 — Mapeamento de Impacto (Política v4)</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #161c24; --panel-2: #1c2330; --border: #2a3340;
+    --text: #e6edf3; --muted: #8b98a5;
+    --green: #3fb950; --green-bg: rgba(63,185,80,0.12);
+    --yellow: #d29922; --yellow-bg: rgba(210,153,34,0.12);
+    --red: #f85149; --red-bg: rgba(248,81,73,0.12);
+    --blue: #58a6ff; --blue-bg: rgba(88,166,255,0.12);
+    --purple: #bc8cff; --purple-bg: rgba(188,140,255,0.12);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.hero { padding: 40px 32px 28px; background: linear-gradient(135deg, #141a24 0%, #0f1419 100%); border-bottom: 1px solid var(--border); }
+  .hero h1 { margin: 0 0 6px; font-size: 25px; }
+  .hero .subtitle { color: var(--muted); font-size: 14px; }
+  .badges { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--border); }
+  .badge.warn { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(210,153,34,0.35); }
+  .badge.info { background: var(--blue-bg); color: var(--blue); border-color: rgba(88,166,255,0.35); }
+  .badge.purple { background: var(--purple-bg); color: var(--purple); border-color: rgba(188,140,255,0.35); }
+  main { max-width: 1180px; margin:0 auto; padding:32px; }
+  nav.toc { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px; padding:14px 16px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); }
+  nav.toc a { color:var(--blue); text-decoration:none; font-size:13px; padding:4px 10px; border-radius:6px; }
+  nav.toc a:hover { background: var(--panel-2); }
+  section { margin-bottom:44px; }
+  h2 { font-size:19px; margin:0 0 16px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  h2 .num { color:var(--muted); font-weight:500; }
+  p.lead { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:10px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+  .card h3 { margin:0 0 8px; font-size:14px; color: var(--blue); }
+  .card p { margin:0; font-size:13px; color: var(--muted); }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border-radius:var(--radius); overflow:hidden; font-size:13.3px; }
+  thead th { background:var(--panel-2); text-align:left; padding:10px 12px; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); border-bottom:1px solid var(--border); }
+  tbody td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.3px; }
+  .before { color: #ffb4ad; }
+  .after { color: #a9eeb4; }
+  .tag { display:inline-block; background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:1px 7px; font-size:11px; font-family: ui-monospace, monospace; color:var(--muted); margin:1px 2px 1px 0; }
+  .amb { background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--purple); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; }
+  .amb h3 { margin:0 0 8px; font-size:14.5px; color: var(--purple); }
+  .amb p { margin:6px 0; font-size:13.3px; }
+  .amb .status { display:inline-block; margin-top:8px; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600; background: var(--yellow-bg); color: var(--yellow); }
+  .steps { display:flex; flex-direction:column; gap:10px; }
+  .step { display:flex; gap:14px; align-items:flex-start; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .step .n { flex:0 0 28px; height:28px; border-radius:50%; background:var(--panel-2); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:var(--blue); }
+  .step .n.done { background: var(--green-bg); color: var(--green); }
+  .step .n.current { background: var(--yellow-bg); color: var(--yellow); }
+  .step .body strong { display:block; margin-bottom:3px; font-size:13.5px; }
+  .step .body span { font-size:12.5px; color:var(--muted); }
+  .filelist { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .filelist div { padding:4px 0; font-size:13px; }
+  footer { text-align:center; padding:28px; color:var(--muted); font-size:12.5px; border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Envelope Dia 2 — Mapeamento de Impacto</h1>
+  <div class="subtitle">Política de Reembolso v4 vs. spec/plan v1.0 · gerado em 15/10/2026 · ainda SEM decisão de ambiguidade, só diagnóstico</div>
+  <div class="badges">
+    <span class="badge warn">⚠ 8 pontos de quebra identificados na spec</span>
+    <span class="badge warn">⚠ 3 pontos de quebra no plan</span>
+    <span class="badge purple">5 ambiguidades novas, pendentes de decisão</span>
+    <span class="badge info">Etapa 1 de 4 (spec → DECISIONS → tasks → código)</span>
+  </div>
+</header>
+
+<main>
+
+<nav class="toc">
+  <a href="#comunicado">Resumo do comunicado</a>
+  <a href="#quebra-spec">O que quebra na spec.md</a>
+  <a href="#quebra-plan">O que quebra no plan.md</a>
+  <a href="#ambiguidades">Ambiguidades novas pendentes</a>
+  <a href="#arquivos">Arquivos do envelope</a>
+  <a href="#proximos-passos">Próximos passos</a>
+</nav>
+
+<section id="comunicado">
+  <h2><span class="num">00</span> Resumo do comunicado do RH</h2>
+  <p class="lead">Fonte: <span class="mono">exemplos/envelope/00-ENVELOPE-LACRADO.md</span>, baixado do gist oficial do desafio.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>A. Limites por centro de custo</h3>
+      <p>Tabela externa (<span class="mono">politica-v4.json</span>), muda sem aviso. <span class="mono">CC-COMERCIAL</span> ganha categoria <span class="mono">representacao</span> (R$300/dia). <span class="mono">CC-ENG-PLATAFORMA</span> zera hospedagem. CC sem entrada usa "política padrão".</p>
+    </div>
+    <div class="card">
+      <h3>B. Despesas internacionais</h3>
+      <p>Campo <span class="mono">moeda</span> (ISO 4217), opcional, default BRL. Conversão pela taxa da <strong>data da despesa</strong>, via <span class="mono">cambio.json</span>. Limites continuam em BRL.</p>
+    </div>
+    <div class="card">
+      <h3>C. Fila de aprovação manual (opcional)</h3>
+      <p>Reembolso &gt; R$500 deixa de ser automático; item entra em estado de pendência. Resultado passa a ter mais de um "status" possível por esse motivo.</p>
+    </div>
+  </div>
+</section>
+
+<section id="quebra-spec">
+  <h2><span class="num">01</span> O que quebra em <span class="mono" style="font-size:16px">spec.md</span></h2>
+  <p class="lead">Comparação do texto normativo atual (v1.0, baseado na política v3) contra o que a v4 exige.</p>
+  <table>
+    <thead><tr><th>Área</th><th class="before">Antes (v3 / spec v1.0)</th><th class="after">Depois (v4, exigido)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">RN-001/002/003</td>
+        <td class="before">Limites fixos no texto: R$60/dia, R$80/dia, R$250/diária, iguais para todo colaborador</td>
+        <td class="after">Limites variam por <span class="mono">centro_custo</span>, lidos de <span class="mono">politica-v4.json</span>; valores da v3 passam a ser só a "política padrão" (fallback)</td>
+      </tr>
+      <tr>
+        <td class="mono">RN-005</td>
+        <td class="before">Gatilho de nota fiscal R$100,00 fixo no texto da regra</td>
+        <td class="after">Mesmo valor, mas agora vem de <span class="mono">nota_fiscal_obrigatoria_acima_de</span> no arquivo de política — deixa de ser constante hardcoded</td>
+      </tr>
+      <tr>
+        <td class="mono">RN-006</td>
+        <td class="before">Ampliação de viagem 50% fixa no texto da regra</td>
+        <td class="after">Mesmo valor, mas vem de <span class="mono">acrescimo_em_viagem_percentual</span> no arquivo de política</td>
+      </tr>
+      <tr>
+        <td class="mono">RN-009</td>
+        <td class="before">"Apenas três categorias são reembolsáveis: alimentacao, transporte_urbano, hospedagem"</td>
+        <td class="after">Falso na v4: <span class="mono">representacao</span> existe e é reembolsável, mas só para os CCs que a listam na tabela (hoje só <span class="mono">CC-COMERCIAL</span>)</td>
+      </tr>
+      <tr>
+        <td class="mono">RN-003</td>
+        <td class="before">Hospedagem sempre tem limite &gt; 0; só é recusada por falta de diárias identificáveis (AMB-010b)</td>
+        <td class="after"><span class="mono">CC-ENG-PLATAFORMA</span> tem hospedagem com limite R$0,00 — recusa estrutural por política do centro de custo, categoria nova de recusa distinta de AMB-010b</td>
+      </tr>
+      <tr>
+        <td class="mono">Seção 4 (entrada)</td>
+        <td class="before"><span class="mono">despesas[].valor</span>: "número, valor da despesa em reais"</td>
+        <td class="after">Campo novo <span class="mono">despesas[].moeda</span> (ISO 4217, opcional, default BRL); <span class="mono">valor</span> pode estar em moeda estrangeira, convertido antes de qualquer comparação com limite (que é sempre em BRL)</td>
+      </tr>
+      <tr>
+        <td class="mono">Seção 4 (saída)</td>
+        <td class="before"><span class="mono">status</span>: <span class="mono">aprovado</span> / <span class="mono">aprovado_parcial</span> / <span class="mono">recusado</span> (+ <span class="mono">ignorado</span> para estornos)</td>
+        <td class="after">Se o item C entrar em escopo: 5º valor <span class="mono">pendente</span> para reembolso &gt; R$500, mudando também as contagens do <span class="mono">resumo</span></td>
+      </tr>
+      <tr>
+        <td class="mono">AMB-008</td>
+        <td class="before"><span class="mono">coworking</span> → <span class="mono">hospedagem</span>, sempre, sem exceção</td>
+        <td class="after">Precisa decidir se continua valendo quando o CC do colaborador não reembolsa hospedagem (<span class="mono">CC-ENG-PLATAFORMA</span>) ou tem <span class="mono">representacao</span> como alternativa mais próxima</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="quebra-plan">
+  <h2><span class="num">02</span> O que quebra em <span class="mono" style="font-size:16px">plan.md</span></h2>
+  <table>
+    <thead><tr><th>Área</th><th class="before">Antes</th><th class="after">Depois (exigido)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Seção 4 — Como a política é representada</td>
+        <td class="before">Constantes nomeadas direto em <span class="mono">politica.py</span>, decisão deliberada contra config externa ("para 2 categorias de política... adicionaria uma camada de parsing sem usuário real")</td>
+        <td class="after">O próprio risco antecipado no plan.md se concretizou: <span class="mono">politica.py</span> precisa carregar <span class="mono">politica-v4.json</span> em tempo de execução, resolvendo limites por <span class="mono">centro_custo</span> com fallback para a política padrão</td>
+      </tr>
+      <tr>
+        <td>DT-002 — assinatura de <span class="mono">calcular()</span></td>
+        <td class="before"><span class="mono">calcular(despesas, periodo)</span> — motor nunca recebe <span class="mono">centro_custo</span>; colaborador só é repassado para a saída, nunca usado no cálculo</td>
+        <td class="after">O motor precisa saber o <span class="mono">centro_custo</span> para escolher a tabela de limites certa — mudança de contrato da função pura central</td>
+      </tr>
+      <tr>
+        <td>Seção 3 — Modelo de dados (<span class="mono">Despesa</span>)</td>
+        <td class="before">Sem campo de moeda; <span class="mono">centro_custo</span> não chega até o motor</td>
+        <td class="after">Precisa de campo <span class="mono">moeda</span> (ou valor já convertido antes do motor) e de <span class="mono">centro_custo</span> propagado até o ponto de cálculo</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ambiguidades">
+  <h2><span class="num">03</span> Ambiguidades novas — levantadas, <u>ainda não decididas</u></h2>
+  <p class="lead">Mesmo processo da v3: identificar → decidir com você, uma a uma → justificar → registrar em <span class="mono">DECISIONS.md</span>. Nenhuma destas foi decidida ainda.</p>
+
+  <div class="amb">
+    <h3>1 — Categoria faltante dentro de um CC que existe parcialmente na tabela</h3>
+    <p><span class="mono">CC-ADM</span> lista <span class="mono">alimentacao</span> e <span class="mono">transporte_urbano</span>, mas não lista <span class="mono">hospedagem</span>.</p>
+    <p><strong>O que não está claro:</strong> a ausência da categoria dentro de um CC presente herda o valor padrão só daquela categoria, ou significa "não reembolsável" para esse CC — como ficou explícito para hospedagem em <span class="mono">CC-ENG-PLATAFORMA</span> (que tem <span class="mono">limite: 0.00</span> explícito, não ausência)?</p>
+    <span class="status">pendente de decisão</span>
+  </div>
+
+  <div class="amb">
+    <h3>2 — Centro de custo totalmente ausente da tabela</h3>
+    <p><span class="mono">CC-SUPORTE-N2</span> (colaborador Dani Okonkwo, segundo arquivo do envelope) não aparece em <span class="mono">centros_custo</span> nenhuma.</p>
+    <p><strong>O que não está claro:</strong> usa 100% a política padrão — mas a política padrão não define <span class="mono">representacao</span> (só existe em <span class="mono">CC-COMERCIAL</span>), e esse colaborador tem uma despesa <span class="mono">representacao</span> (<span class="mono">f-003</span>). Isso é categoria fora da política para esse CC, ou herda de algum outro lugar?</p>
+    <span class="status">pendente de decisão</span>
+  </div>
+
+  <div class="amb">
+    <h3>3 — Moeda sem cotação na tabela de câmbio</h3>
+    <p><span class="mono">e-006</span> está em <span class="mono">GBP</span>; <span class="mono">cambio.json</span> só tem taxas para <span class="mono">USD</span> e <span class="mono">EUR</span> — a moeda não existe na tabela, em nenhuma data.</p>
+    <p><strong>O que não está claro:</strong> recusa a despesa por dado externo insuficiente (mesmo padrão de RN-003/AMB-010b: não assumir, recusar) ou é erro fatal de execução que interrompe o processamento inteiro?</p>
+    <span class="status">pendente de decisão</span>
+  </div>
+
+  <div class="amb">
+    <h3>4 — Data sem cotação publicada (fim de semana)</h3>
+    <p><span class="mono">e-004</span> ocorre em 2026-07-18 (sábado); <span class="mono">cambio.json</span> só publica em dias úteis bancários e não tem entrada para esse dia.</p>
+    <p><strong>O que não está claro:</strong> usa a cotação do último dia útil anterior, a mais próxima (antes ou depois), ou recusa a despesa por falta de taxa exata daquela data?</p>
+    <span class="status">pendente de decisão</span>
+  </div>
+
+  <div class="amb">
+    <h3>5 — Ordem de conversão de moeda vs. outras regras</h3>
+    <p>A conversão de moeda estrangeira para BRL precisa acontecer em algum ponto da ordem de regras (seção 8 da spec).</p>
+    <p><strong>O que não está claro:</strong> a conversão ocorre antes do arredondamento (RN-011) e antes da comparação com o gatilho de nota fiscal (RN-005, que é em BRL) — ou é possível que o valor original em moeda estrangeira dispare RN-005 mesmo que convertido fique abaixo de R$100? E como isso interage com a extração de limite por diária de hospedagem (RN-003), que agora também teria valor convertido?</p>
+    <span class="status">pendente de decisão</span>
+  </div>
+</section>
+
+<section id="arquivos">
+  <h2><span class="num">04</span> Arquivos do envelope (já salvos no repositório)</h2>
+  <div class="filelist">
+    <div><span class="tag">doc</span> <span class="mono">exemplos/envelope/00-ENVELOPE-LACRADO.md</span> — texto completo do comunicado</div>
+    <div><span class="tag">dados</span> <span class="mono">exemplos/envelope/politica-v4.json</span> — tabela de limites por centro de custo</div>
+    <div><span class="tag">dados</span> <span class="mono">exemplos/envelope/cambio.json</span> — taxas de câmbio USD/EUR por data</div>
+    <div><span class="tag">dados</span> <span class="mono">exemplos/envelope/despesas-envelope.json</span> — Rafael Nkemelu, CC-COMERCIAL, 10 despesas (representação, moeda estrangeira, coworking)</div>
+    <div><span class="tag">dados</span> <span class="mono">exemplos/envelope/despesas-envelope-cc-desconhecido.json</span> — Dani Okonkwo, CC-SUPORTE-N2 (ausente da tabela), 4 despesas</div>
+  </div>
+</section>
+
+<section id="proximos-passos">
+  <h2><span class="num">05</span> Próximos passos (ordem exigida pelo envelope)</h2>
+  <div class="steps">
+    <div class="step"><div class="n done">1</div><div class="body"><strong>Mapear impacto na spec/plan</strong><span>Concluído — este documento.</span></div></div>
+    <div class="step"><div class="n current">2</div><div class="body"><strong>Decidir as 5 ambiguidades, uma a uma</strong><span>Próxima etapa — mesma dinâmica da v3: uma pergunta por vez, com opções e justificativa.</span></div></div>
+    <div class="step"><div class="n">3</div><div class="body"><strong>Atualizar spec.md</strong><span>RN-001/002/003/005/006/009, seção 4, novas AMB-01X, com as decisões já tomadas.</span></div></div>
+    <div class="step"><div class="n">4</div><div class="body"><strong>Registrar em DECISIONS.md</strong><span>O que mudou, por quê, o que foi invalidado.</span></div></div>
+    <div class="step"><div class="n">5</div><div class="body"><strong>Novas tasks em tasks.md (Fase 5)</strong><span>Numeração continuando de T-020.</span></div></div>
+    <div class="step"><div class="n">6</div><div class="body"><strong>Código</strong><span>Commits referenciando as novas tasks; medir arquivos tocados, tempo, o que a arquitetura absorveu de graça vs. resistiu — para a seção "O envelope" do RELATORIO.md.</span></div></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Fonte do envelope: gist oficial do desafio (<span class="mono">Sassine/c9c7d72a4aae51306752c4f9f87a32dc</span>) ·
+  arquivos salvos em <span class="mono">exemplos/envelope/</span> · nenhuma decisão de ambiguidade tomada ainda neste documento
+</footer>
+
+</body>
+</html>

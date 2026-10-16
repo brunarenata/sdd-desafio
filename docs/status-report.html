@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Report — Motor de Reembolso</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #161c24;
+    --panel-2: #1c2330;
+    --border: #2a3340;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --green: #3fb950;
+    --green-bg: rgba(63,185,80,0.12);
+    --yellow: #d29922;
+    --yellow-bg: rgba(210,153,34,0.12);
+    --red: #f85149;
+    --red-bg: rgba(248,81,73,0.12);
+    --blue: #58a6ff;
+    --blue-bg: rgba(88,166,255,0.12);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.hero {
+    padding: 40px 32px 28px;
+    background: linear-gradient(135deg, #141a24 0%, #0f1419 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+  .hero h1 { margin: 0 0 6px; font-size: 26px; }
+  .hero .subtitle { color: var(--muted); font-size: 14px; }
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border);
+  }
+  .badge.ok { background: var(--green-bg); color: var(--green); border-color: rgba(63,185,80,0.35); }
+  .badge.warn { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(210,153,34,0.35); }
+  .badge.info { background: var(--blue-bg); color: var(--blue); border-color: rgba(88,166,255,0.35); }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px; }
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px;
+    padding: 14px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  nav.toc a { color: var(--blue); text-decoration: none; font-size: 13px; padding: 4px 10px; border-radius: 6px; }
+  nav.toc a:hover { background: var(--panel-2); }
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 19px; margin: 0 0 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num { color: var(--muted); font-weight: 500; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .card .label { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .card .value { font-size: 26px; font-weight: 700; }
+  .card.green .value { color: var(--green); }
+  .card.red .value { color: var(--red); }
+  .card.blue .value { color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; }
+  thead th {
+    background: var(--panel-2); text-align: left; padding: 10px 12px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+  .num-cell { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .pill.aprovado { background: var(--green-bg); color: var(--green); }
+  .pill.aprovado_parcial { background: var(--yellow-bg); color: var(--yellow); }
+  .pill.recusado { background: var(--red-bg); color: var(--red); }
+  .pill.ignorado { background: var(--blue-bg); color: var(--blue); }
+  .pill.pass { background: var(--green-bg); color: var(--green); }
+  .pill.ressalva { background: var(--yellow-bg); color: var(--yellow); }
+  .tag { display: inline-block; background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; font-size: 11px; font-family: ui-monospace, monospace; color: var(--muted); margin: 1px 2px 1px 0; }
+  .note { color: var(--muted); font-size: 13px; }
+  .finding {
+    background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--yellow);
+    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px;
+  }
+  .finding h3 { margin: 0 0 8px; font-size: 15px; color: var(--yellow); }
+  .finding p { margin: 6px 0; font-size: 13.5px; }
+  .finding .fixed { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--green); font-weight: 600; }
+  .diff { margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .diff .line { padding: 8px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .diff .before { background: var(--red-bg); color: #ffb4ad; border-bottom: 1px solid var(--border); }
+  .diff .after { background: var(--green-bg); color: #a9eeb4; }
+  .diff .before::before { content: "− ANTES (spec)  "; opacity: 0.7; font-family: inherit; }
+  .diff .after::before { content: "+ DEPOIS (spec)  "; opacity: 0.7; font-family: inherit; }
+  .finding .result-note { margin-top: 10px; padding: 10px 12px; background: var(--panel-2); border-radius: 8px; font-size: 13px; }
+  .finding .result-note strong { color: var(--blue); }
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; }
+  details summary { padding: 12px 16px; cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▸ "; color: var(--muted); }
+  details[open] summary::before { content: "▾ "; }
+  details .body { padding: 0 16px 16px; color: var(--muted); font-size: 13.5px; }
+  footer { text-align: center; padding: 28px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--border); }
+  .bar-wrap { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: var(--panel-2); margin-top: 10px; }
+  .bar-seg.reembolsado { background: var(--green); }
+  .bar-seg.recusado { background: var(--red); }
+  .legend { display:flex; gap: 16px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+  .legend span.dot { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-top">
+    <div>
+      <h1>Status Report — Motor de Cálculo de Reembolso</h1>
+      <div class="subtitle">Desafio SDD · spec v1.0 · gerado em 15/10/2026 a partir de <span class="mono">exemplos/despesas-exemplo.json</span></div>
+    </div>
+  </div>
+  <div class="badges">
+    <span class="badge ok">✓ 46/46 testes passando</span>
+    <span class="badge ok">✓ 14/14 despesas auditadas</span>
+    <span class="badge ok">✓ 12/12 regras RN-00X cobertas por teste</span>
+    <span class="badge warn">⚠ 2 contradições de spec corrigidas</span>
+    <span class="badge info">reembolsado + recusado = declarado ✓</span>
+  </div>
+</header>
+
+<main>
+
+<nav class="toc">
+  <a href="#resumo">Resumo executivo</a>
+  <a href="#regras">Regras de negócio</a>
+  <a href="#despesas">Despesas auditadas</a>
+  <a href="#ambiguidades">Ambiguidades resolvidas</a>
+  <a href="#achados">Achados e correções</a>
+  <a href="#testes">Cobertura de testes</a>
+</nav>
+
+<section id="resumo">
+  <h2><span class="num">01</span> Resumo executivo</h2>
+  <div class="cards">
+    <div class="card blue"><div class="label">Total declarado</div><div class="value">R$ 1.861,84</div></div>
+    <div class="card green"><div class="label">Total reembolsado</div><div class="value">R$ 815,43</div></div>
+    <div class="card red"><div class="label">Total recusado</div><div class="value">R$ 1.046,41</div></div>
+    <div class="card"><div class="label">Despesas processadas</div><div class="value">14</div></div>
+    <div class="card green"><div class="label">Aprovadas (status ≠ recusado)</div><div class="value">8</div></div>
+    <div class="card red"><div class="label">Recusadas</div><div class="value">6</div></div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-seg reembolsado" style="width:43.8%"></div>
+    <div class="bar-seg recusado" style="width:56.2%"></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--green)"></span>Reembolsado (43,8%)</span>
+    <span><span class="dot" style="background:var(--red)"></span>Recusado (56,2%)</span>
+  </div>
+  <p class="note" style="margin-top:14px;">
+    Checagem de integridade: <span class="mono">total_reembolsado + total_recusado = total_declarado</span>
+    → 815,43 + 1.046,41 = 1.861,84 ✓ (critério de aceite da spec, seção 9).
+    O estorno d-009 (-R$45,00) não entra em nenhuma soma, conforme RN-010.
+  </p>
+</section>
+
+<section id="regras">
+  <h2><span class="num">02</span> Regras de negócio (RN-00X)</h2>
+  <table>
+    <thead>
+      <tr><th>Regra</th><th>Descrição</th><th>Teste automatizado</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">RN-001</td><td>Limite diário de alimentação (R$60,00), soma por data</td><td class="mono">test_rn_001_soma_dia_alimentacao</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-002</td><td>Limite diário de transporte urbano (R$80,00), soma por data</td><td class="mono">test_rn_002_transporte_dentro_limite</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-003</td><td>Limite de hospedagem R$250,00/diária, extraído da descrição</td><td class="mono">test_rn_003_* (5 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-004</td><td>Corte sequencial por ordem de lançamento quando soma do dia excede limite</td><td class="mono">test_rn_001_*, test_ordem_regras_estrutural_*</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-005</td><td>Nota fiscal obrigatória para valor &gt; R$100,00 (fronteira exclusiva)</td><td class="mono">test_rn_005_* (3 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-006</td><td>Ampliação de 50% nos limites diários em dia com hospedagem (viagem)</td><td class="mono">test_rn_006_* (3 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-007</td><td>Despesa fora do período de competência é recusada</td><td class="mono">test_rn_007_* (2 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-008</td><td>Duplicata (data+categoria+valor+fornecedor) recusa a de maior id</td><td class="mono">test_rn_008_* (2 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-009</td><td>Categorias fora da política recusadas; mapeamento por analogia (coworking→hospedagem)</td><td class="mono">test_rn_009_* (2 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-010</td><td>Valor negativo (estorno) ignorado, fora de qualquer soma</td><td class="mono">test_rn_010_* (2 testes)</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-011</td><td>Arredondamento banker's rounding (half-even) a 2 casas</td><td class="mono">test_rn_011_arredondamento</td><td><span class="pill pass">OK</span></td></tr>
+      <tr><td class="mono">RN-012</td><td>Normalização de categoria case-insensitive</td><td class="mono">test_rn_012_categoria_maiuscula</td><td><span class="pill pass">OK</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="despesas">
+  <h2><span class="num">03</span> Despesas auditadas (14/14)</h2>
+  <p class="note">Cada linha confere entrada → regras aplicadas → status/valor de saída, cruzado com <span class="mono">docs/auditoria-resultado-2026-07.md</span>.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Categoria aplicada</th><th>Declarado</th><th>Reembolsado</th><th>Status</th><th>Regras</th><th>Veredito</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">d-001</td><td>alimentacao</td><td class="num-cell">72,50</td><td class="num-cell">60,00</td><td><span class="pill aprovado_parcial">parcial</span></td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-002</td><td>alimentacao</td><td class="num-cell">38,00</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-003</td><td>transporte_urbano</td><td class="num-cell">100,00</td><td class="num-cell">80,00</td><td><span class="pill aprovado_parcial">parcial</span></td><td><span class="tag">RN-002</span><span class="tag">RN-004</span><span class="tag">AMB-003</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-004</td><td>transporte_urbano</td><td class="num-cell">100,01</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-005</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-005</td><td>hospedagem <span class="note">(coworking)</span></td><td class="num-cell">89,00</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-003</span><span class="tag">AMB-008</span><span class="tag">AMB-010b</span></td><td><span class="pill ressalva">spec corrigida</span></td></tr>
+      <tr><td class="mono">d-006</td><td>alimentacao</td><td class="num-cell">54,90</td><td class="num-cell">54,90</td><td><span class="pill aprovado">aprovado</span></td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-007</td><td>alimentacao</td><td class="num-cell">54,90</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-008</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-008</td><td>alimentacao</td><td class="num-cell">41,00</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-007</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-009</td><td>— <span class="note">(estorno)</span></td><td class="num-cell">-45,00</td><td class="num-cell">0,00</td><td><span class="pill ignorado">ignorado</span></td><td><span class="tag">RN-010</span><span class="tag">AMB-009</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-010</td><td>hospedagem</td><td class="num-cell">480,00</td><td class="num-cell">480,00</td><td><span class="pill aprovado">aprovado</span></td><td><span class="tag">RN-003</span><span class="tag">AMB-010</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-011</td><td>alimentacao</td><td class="num-cell">33,33</td><td class="num-cell">33,33</td><td><span class="pill aprovado">aprovado</span></td><td><span class="tag">RN-001</span><span class="tag">RN-011</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-012</td><td>alimentacao</td><td class="num-cell">47,20</td><td class="num-cell">47,20</td><td><span class="pill aprovado">aprovado</span></td><td><span class="tag">RN-001</span><span class="tag">RN-004</span></td><td><span class="pill pass">confere</span></td></tr>
+      <tr><td class="mono">d-013</td><td>hospedagem</td><td class="num-cell">690,00</td><td class="num-cell">0,00</td><td><span class="pill recusado">recusado</span></td><td><span class="tag">RN-005</span></td><td><span class="pill ressalva">spec corrigida</span></td></tr>
+      <tr><td class="mono">d-014</td><td>alimentacao <span class="note">(ALIMENTACAO)</span></td><td class="num-cell">61,00</td><td class="num-cell">60,00</td><td><span class="pill aprovado_parcial">parcial</span></td><td><span class="tag">RN-001</span><span class="tag">RN-012</span></td><td><span class="pill pass">confere</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ambiguidades">
+  <h2><span class="num">04</span> Ambiguidades resolvidas (AMB-00X)</h2>
+  <details>
+    <summary>AMB-001 — Unidade do limite diário (alimentação/transporte)</summary>
+    <div class="body">Decisão: limite incide sobre a soma de todas as despesas da mesma categoria na mesma data, não por lançamento isolado.</div>
+  </details>
+  <details>
+    <summary>AMB-002 — Significado de "reembolsado parcialmente"</summary>
+    <div class="body">Decisão: reembolsa até o teto e descarta apenas o excedente (não recusa o item inteiro).</div>
+  </details>
+  <details>
+    <summary>AMB-003 — Fronteira do gatilho de nota fiscal (R$100,00)</summary>
+    <div class="body">Decisão: estritamente maior que R$100,00 exige nota; R$100,00 exato não exige.</div>
+  </details>
+  <details>
+    <summary>AMB-004 — Consequência de nota fiscal ausente quando devida</summary>
+    <div class="body">Decisão: recusa total (R$0,00), não glosa parcial — "obrigatória" é condição binária de elegibilidade.</div>
+  </details>
+  <details>
+    <summary>AMB-005 — Definição de "em viagem"</summary>
+    <div class="body">Decisão: inferida pela presença de despesa de hospedagem na mesma data; ampliação de 50% só para alimentação/transporte naquele dia.</div>
+  </details>
+  <details>
+    <summary>AMB-006 — Despesa fora do período de competência</summary>
+    <div class="body">Decisão: recusa integral de qualquer despesa com data fora de [periodo.inicio, periodo.fim].</div>
+  </details>
+  <details>
+    <summary>AMB-007 — Definição e tratamento de duplicata</summary>
+    <div class="body">Decisão: duplicata = mesma data + categoria normalizada + valor + fornecedor; mantém a de menor id, recusa as demais.</div>
+  </details>
+  <details>
+    <summary>AMB-008 — Categorias fora da lista oficial (mapeamento por analogia)</summary>
+    <div class="body">Decisão: mapear por natureza do gasto quando equivalente; <span class="mono">coworking</span> → <span class="mono">hospedagem</span>. Sem analogia razoável, recusa (RN-009).</div>
+  </details>
+  <details>
+    <summary>AMB-009 — Despesas com valor negativo (estorno)</summary>
+    <div class="body">Decisão: ignoradas, fora de qualquer soma, status próprio <span class="mono">ignorado</span>.</div>
+  </details>
+  <details>
+    <summary>AMB-010 / AMB-010b — Número de diárias de hospedagem (dado em texto livre)</summary>
+    <div class="body">Decisão: extrai por reconhecimento de texto na descrição ("N diárias"/"N noites"); se não identificável, recusa integral — não assume "1 diária" por padrão.</div>
+  </details>
+  <details>
+    <summary>AMB-011 — Precisão e arredondamento monetário</summary>
+    <div class="body">Decisão: banker's rounding (half-even) a 2 casas antes de qualquer comparação ou soma.</div>
+  </details>
+  <details>
+    <summary>AMB-012 — Sensibilidade a maiúsculas/minúsculas na categoria</summary>
+    <div class="body">Decisão: comparação case-insensitive; <span class="mono">categoria_original</span> preserva o valor bruto, <span class="mono">categoria_aplicada</span> reflete o normalizado.</div>
+  </details>
+</section>
+
+<section id="achados">
+  <h2><span class="num">05</span> Achados da auditoria e correções aplicadas</h2>
+
+  <div class="finding">
+    <h3>Achado 1 — d-005: "Aceite" de RN-009 contradizia AMB-010b</h3>
+    <p>d-005 é <span class="mono">coworking</span> (R$89,00), mapeada para <span class="mono">hospedagem</span> por AMB-008. A descrição é <em>"Diaria em espaco compartilhado"</em> — sem nenhum número de diárias/noites. Pela decisão AMB-010b, isso é dado insuficiente e a despesa deve ser <strong>recusada</strong>. Mas o texto de exemplo de RN-009 dizia o contrário:</p>
+    <div class="diff">
+      <div class="line before">"→ avaliada com limite de R$250,00/diária (1 diária implícita, ver RN-003) → dentro do limite → reembolso integral de R$89,00."</div>
+      <div class="line after">"→ a descrição não traz um número de diárias extraível → recusada integralmente por RN-003/AMB-010b (fallback de dado insuficiente), não reembolso integral."</div>
+    </div>
+    <p><strong>Causa raiz:</strong> erro editorial na spec — a frase de exemplo ("Aceite") de RN-009 nunca foi atualizada depois que AMB-010b decidiu "recusar quando não dá para extrair o número de diárias, em vez de assumir 1 diária por padrão". Não é bug de código: o motor sempre seguiu AMB-010b corretamente.</p>
+    <div class="result-note"><strong>O que NÃO mudou:</strong> o resultado do cálculo para d-005 continua <span class="pill recusado">recusado</span>, R$0,00 — igual antes e depois da correção. Só o texto normativo da spec foi corrigido para parar de contradizer a própria regra.</div>
+    <p class="fixed">✓ Corrigido em <span class="mono">spec.md</span> (RN-009, RN-003, seção 7) e registrado em <span class="mono">DECISIONS.md</span> (2026-10-15).</p>
+  </div>
+
+  <div class="finding">
+    <h3>Achado 2 — d-013: "Aceite" de RN-003 e tabela da seção 7 ignoravam RN-005</h3>
+    <p>d-013 é <span class="mono">hospedagem</span>, "Airbnb 3 noites", R$690,00, mas <span class="mono">tem_nota_fiscal: false</span>. A ordem de regras da seção 8 exige avaliar nota fiscal (RN-005) <strong>antes</strong> da agregação por diária (RN-003) — valor &gt; R$100,00 sem nota = recusa total. Mas o texto de RN-003 e a tabela da seção 7 ignoravam isso:</p>
+    <div class="diff">
+      <div class="line before">"d-013 'Airbnb 3 noites', valor R$690,00 → R$230,00/diária → dentro do limite → reembolso integral de R$690,00."</div>
+      <div class="line after">"d-013 ... mas tem_nota_fiscal: false → recusada integralmente ainda no passo de RN-005 (valor &gt; R$100,00 sem nota), antes de chegar à agregação por diária desta regra."</div>
+    </div>
+    <p><strong>Causa raiz:</strong> mesma classe de erro editorial — exemplo de regra escrito sem cruzar com a interação de outra regra que se aplica antes na ordem de execução.</p>
+    <div class="result-note"><strong>O que NÃO mudou:</strong> o resultado do cálculo para d-013 continua <span class="pill recusado">recusado</span>, R$0,00 — igual antes e depois da correção. Só o texto normativo da spec foi corrigido.</div>
+    <p class="fixed">✓ Corrigido em <span class="mono">spec.md</span> (RN-003, seção 7) e registrado em <span class="mono">DECISIONS.md</span> (2026-10-15).</p>
+  </div>
+
+  <p class="note">Relatório completo despesa a despesa: <span class="mono">docs/auditoria-resultado-2026-07.md</span>. Nenhuma das duas correções alterou o comportamento do motor de cálculo — apenas o texto normativo da spec, que estava inconsistente com decisões de ambiguidade já registradas.</p>
+</section>
+
+<section id="testes">
+  <h2><span class="num">06</span> Cobertura de testes</h2>
+  <div class="cards">
+    <div class="card green"><div class="label">Testes executados</div><div class="value">46</div></div>
+    <div class="card green"><div class="label">Passando</div><div class="value">46</div></div>
+    <div class="card"><div class="label">Falhando</div><div class="value">0</div></div>
+    <div class="card blue"><div class="label">Regras RN cobertas</div><div class="value">12/12</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Arquivo</th><th>Escopo</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">tests/test_motor.py</td><td>Regras de negócio (RN-001 a RN-012), ordem de aplicação, agregação diária</td></tr>
+      <tr><td class="mono">tests/test_io_despesas.py</td><td>Leitura e validação do JSON de entrada, incluindo exemplo oficial</td></tr>
+      <tr><td class="mono">tests/test_relatorio.py</td><td>Formato e serialização da saída</td></tr>
+      <tr><td class="mono">tests/test_cli.py</td><td>Fluxo ponta a ponta via CLI, entrada inválida, arquivo inexistente</td></tr>
+      <tr><td class="mono">tests/test_politica.py</td><td>Constantes de política (limites, teto de nota fiscal)</td></tr>
+      <tr><td class="mono">tests/test_modelos.py</td><td>Estruturas de dados (Despesa, ResultadoDespesa, Resumo)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<footer>
+  Gerado a partir de <span class="mono">_resultado_20261014.json</span> ·
+  spec <span class="mono">specs/001-motor-reembolso/spec.md</span> v1.0 ·
+  auditoria completa em <span class="mono">docs/auditoria-resultado-2026-07.md</span>
+</footer>
+
+</body>
+</html>
